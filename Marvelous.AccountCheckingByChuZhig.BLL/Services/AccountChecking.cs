@@ -1,14 +1,15 @@
-﻿using Newtonsoft.Json;
+﻿using Marvelous.AccountCheckingByChuZhig.BLL.Models;
+using Newtonsoft.Json;
 using System.Net;
 using System.Text.Json;
 
-namespace Marvelous.AccountCheckingByChuZhig.BLL
+namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
     public class AccountChecking
     {
         private readonly string _urlToTakeAllLeads = "https://piter-education.ru:6010/api/leads";
 
-        public List<LeadResponse> GetAllLeads()
+        public List<LeadModel> GetAllLeads()
         {
             WebRequest myWebRequest = WebRequest.Create($"{_urlToTakeAllLeads}");
             WebResponse myWebResponse = myWebRequest.GetResponse();
@@ -18,7 +19,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL
             {
                 text = sr.ReadToEnd();
             }
-            List<LeadResponse> result = JsonConvert.DeserializeObject<List<LeadResponse>>(text);
+            List<LeadModel> result = JsonConvert.DeserializeObject<List<LeadModel>>(text);
             return result;
         }
     }
