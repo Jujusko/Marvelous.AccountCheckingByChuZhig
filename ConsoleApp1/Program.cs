@@ -3,8 +3,9 @@ using Marvelous.AccountCheckingByChuZhig.BLL.Helpers;
 using Marvelous.AccountCheckingByChuZhig.BLL.Services;
 
 Console.WriteLine("Hello, World!");
-AccountChecking ac = new();
+ReportService ac = new();
 var asc = ac.GetAllLeads();
-int a = 0;
 
- var str = ReportURLs.GetLeadTransactionForPeriod(3, DateTime.Now, DateTime.Now.AddDays(4));
+
+ var str = ac.GetLeadTransactionsForPeriod(3, DateTime.Now.AddDays(-12), DateTime.Now);
+int a = 0;
