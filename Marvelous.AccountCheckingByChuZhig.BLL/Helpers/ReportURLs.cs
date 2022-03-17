@@ -15,10 +15,9 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Helpers
 
         public static string GetLeadTransactionForPeriod(int leadId, DateTime start, DateTime end)
         {
-            var startString = DateTimeToSQLStringConverter.Convert(start);
-            var endString = DateTimeToSQLStringConverter.Convert(end);
-            var str = $"https://piter-education.ru:6010/api/leads/{leadId}/transactions-for-period?startDate={startString}&finishDate={endString}";
-            return str;
+            var startString = start.ToString("s");
+            var endString = end.ToString("s");
+            return $"https://piter-education.ru:6010/api/leads/{leadId}/transactions-for-period?startDate={startString}&finishDate={endString}";
         }
 
         
