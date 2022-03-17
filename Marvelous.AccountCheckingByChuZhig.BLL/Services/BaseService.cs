@@ -5,7 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Marvelous.AccountCheckingByChuZhig.BLL.Helpers
+namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
     public abstract class BaseService
     {
