@@ -34,15 +34,16 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             //далее цикл на 50 потоков -> на каждый поток вызываем хранимку получающую 200 лидов и из црмки этих же лидов (?)
             int k = 0;
             int start = 10;
-            for (int i = 1; i < 50; i+=10)
+            for (int i = 1; i < 50; i = i + 10)
             {
-                Console.WriteLine("Start = " + i + "END = " + start);
-                //threads[k] = new Thread(() => this.GetAllLeads(i, start));
-                //start += 10;
-                //threads[k].Start();
-                //k++;
-                //if (k == 5)
-                //    break;
+                //Console.WriteLine("Start = " + i + "END = " + start);
+                threads[k] = new Thread(() => GetAllLeads(i, start));
+                threads[k].Start();
+                Thread.Sleep(100);
+                start += 10;
+                k++;
+                if (k == 5)
+                    break;
             }
             
             //          //в потоке вызов метода который проверяет всю информацию и по логике меняем статус 
@@ -55,7 +56,6 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
         {
             foreach(var m in models)
             {
-
                     Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId} PRINTS {m.Id}") ;
                      Console.WriteLine();
 
@@ -67,7 +67,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
         {
             WebRequest myWebRequest = WebRequest.Create($"https://piter-education.ru:6010/api/Leads/take-from-{start}-to-{end}");
             WebResponse myWebResponse = myWebRequest.GetResponse();
-
+            //Console.WriteLine(start + " " + end);
             string text;
             using (var sr = new StreamReader(myWebResponse.GetResponseStream()))
             {
