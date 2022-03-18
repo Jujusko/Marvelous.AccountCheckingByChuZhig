@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
-    internal class Service
+    public class CRMService: BaseService
     {
     }
 }
