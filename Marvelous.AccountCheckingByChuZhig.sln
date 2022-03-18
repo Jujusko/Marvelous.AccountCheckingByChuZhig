@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Marvelous.AccountCheckingBy
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Marvelous.AccountCheckingByChuZhig", "ConsoleApp1\Marvelous.AccountCheckingByChuZhig.csproj", "{431E832C-CBB2-48EB-9D75-8B75442C004A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marvelous.AccountCheckingByChuZhig.BLL.Tests", "Marvelous.AccountCheckingByChuZhig.BLL.Tests\Marvelous.AccountCheckingByChuZhig.BLL.Tests.csproj", "{CD780543-F77A-4B1D-B77C-FE564C461752}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{431E832C-CBB2-48EB-9D75-8B75442C004A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{431E832C-CBB2-48EB-9D75-8B75442C004A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{431E832C-CBB2-48EB-9D75-8B75442C004A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD780543-F77A-4B1D-B77C-FE564C461752}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD780543-F77A-4B1D-B77C-FE564C461752}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD780543-F77A-4B1D-B77C-FE564C461752}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD780543-F77A-4B1D-B77C-FE564C461752}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
