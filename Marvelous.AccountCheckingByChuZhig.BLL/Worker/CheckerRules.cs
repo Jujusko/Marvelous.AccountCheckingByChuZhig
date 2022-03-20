@@ -12,7 +12,9 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Worker
     {
         public bool CheckLeadBirthday(LeadModel leadModel)
         {
-            return leadModel.BirthDate >= 
+            int yearDifference = DateTime.Now.Year - leadModel.BirthDate.Year;
+            DateTime date = leadModel.BirthDate.AddYears(yearDifference);
+            return date >= 
                 DateTime.Now.Subtract(TimeSpan.FromDays(14)); //считать заранее при каждом новом запуске
         }
         public bool CheckLeadTransactions(List<TransactionModel> leadTransactions)
