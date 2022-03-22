@@ -24,11 +24,12 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Tests
                 Phone = "1-800-110-09-01",
                 Role = Role.Regular
             };
+            GetAccounts();
         }
 
-        public List<AccountModel> GetAccounts()
+        public AccountModel[] GetAccounts()
         {
-            List<AccountModel> accounts =  new List<AccountModel>
+            AccountModel[] accounts = new AccountModel[]
             {
                 new AccountModel
                 {
@@ -73,25 +74,25 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Tests
                 new AccountModel
                 {
                     Id = 5,
-                    Name = "Мексиканские песы",
+                    Name = "Сингапурский доллар",
                     Balance = 100000,
                     IsBlocked = false,
                     LockDate = null,
-                    CurrencyType =Currency.MXN,
+                    CurrencyType =Currency.SGD,
                     Lead = Lead
                 },
                 new AccountModel
                 {
                     Id = 6,
-                    Name = "Индийская рупия",
+                    Name = "Чешских крон",
                     Balance = 100000,
                     IsBlocked = false,
                     LockDate = null,
-                    CurrencyType =Currency.INR,
+                    CurrencyType =Currency.CZK,
                     Lead = Lead
                 },
             };
-            Lead.Accounts = accounts;
+            Lead.Accounts = accounts.ToList();
             return accounts;
         }
     }

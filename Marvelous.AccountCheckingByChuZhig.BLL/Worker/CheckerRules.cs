@@ -1,4 +1,5 @@
-﻿using Marvelous.AccountCheckingByChuZhig.BLL.Models;
+﻿using Marvelous.AccountCheckingByChuZhig.BLL.Helpers;
+using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 using Marvelous.Contracts;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,11 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Worker
 {
     public class CheckerRules
     {
+        private CurrencyParser _parser;
+        public CheckerRules()
+        {
+            _parser = new();
+        }
         public bool CheckLeadBirthday(LeadModel leadModel)
         {
             int yearDifference = DateTime.Now.Year - leadModel.BirthDate.Year;
@@ -25,6 +31,28 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Worker
 
 
             return true;
+        }
+
+        public bool CheckDifferenceWithdrawDeposit(List<TransactionModel> leadTransactionsLastMonth)
+        {
+            decimal difference = 0;
+            var transactionsWithoutTransfer = leadTransactionsLastMonth.Where(cum=>cum.Type != TransactionType.Transfer && cum.Type!=TransactionType.Service);
+
+            foreach (TransactionModel trans in transactionsWithoutTransfer)
+            {
+                var amountInRub = trans.Amount * _parser.GetRateInRub(trans.Currency, trans.Date);
+                if (trans.Type ==  TransactionType.Withdraw)
+                    difference -= amountInRub;
+                
+                else
+                    difference += amountInRub;
+                
+            }
+
+            if(difference > 13000 || difference < -13000)
+                return true;
+
+            return false;
         }
     }
 }
