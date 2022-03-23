@@ -8,6 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="0.16.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Marvelous.AccountCheckingByChuZhig.BLL.Tests\Marvelous.AccountCheckingByChuZhig.BLL.Tests.csproj" />
     <ProjectReference Include="..\Marvelous.AccountCheckingByChuZhig.BLL\Marvelous.AccountCheckingByChuZhig.BLL.csproj" />
   </ItemGroup>
 

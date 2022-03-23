@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="0.16.1" />
     <PackageReference Include="Marvelous.Contracts" Version="1.1.1" />
+    <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="161.47008.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 

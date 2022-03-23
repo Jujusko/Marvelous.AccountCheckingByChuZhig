@@ -17,7 +17,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Helpers
         {
             var startString = start.ToString("s");
             var endString = end.ToString("s");
-            return $"https://piter-education.ru:6010/api/leads/{leadId}/transactions-for-period?startDate={startString}&finishDate={endString}";
+            return $"https://piter-education.ru:6010/api/Transactions/by-lead-id/in-range?leadId={leadId}&startDate={startString}&finishDate={endString}";
         }
 
         
