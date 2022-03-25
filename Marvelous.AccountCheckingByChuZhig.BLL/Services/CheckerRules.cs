@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Marvelous.Contracts.Enums;
 
-namespace Marvelous.AccountCheckingByChuZhig.BLL.Worker
+namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
     public class CheckerRules : ICheckerRules
     {

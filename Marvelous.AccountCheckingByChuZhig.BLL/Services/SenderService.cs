@@ -1,5 +1,4 @@
 ﻿using Marvelous.AccountCheckingByChuZhig.BLL.Models;
-using Marvelous.AccountCheckingByChuZhig.BLL.Worker;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,12 +15,24 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
         public SenderService(ICheckerRules checkerRules)
         {
             _checkerRules = checkerRules;
+            Task[] tasks = new Task[]
+            {
+
+            };
         }
 
-        public async Task StartCheck(LeadModel lead)
+        public async Task<bool> StartCheckLeadBirthday(LeadModel lead)
         {
-            Task checkBirthday = new Task(() => _checkerRules.CheckLeadBirthday(lead));
+            Task<bool> checkBirthday = new Task<bool>(() => _checkerRules.CheckLeadBirthday(lead));
             await checkBirthday;
+            return checkBirthday.Result;
+        }
+
+        public async Task<bool> StartCheckCountLeadTransactions(List<TransactionResponseModel> transactions)
+        {
+            Task<bool> checkTransactionsCount = new Task<bool>(() => _checkerRules.CheckLeadTransactions(transactions));
+            await checkTransactionsCount;
+            return checkTransactionsCount.Result;
         }
     }
 }

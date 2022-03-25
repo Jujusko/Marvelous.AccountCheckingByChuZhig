@@ -1,6 +1,6 @@
 ﻿using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 
-namespace Marvelous.AccountCheckingByChuZhig.BLL.Worker
+namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
     public interface ICheckerRules
     {

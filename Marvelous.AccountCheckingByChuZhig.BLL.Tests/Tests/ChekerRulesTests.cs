@@ -1,4 +1,4 @@
-﻿using Marvelous.AccountCheckingByChuZhig.BLL.Worker;
+﻿using Marvelous.AccountCheckingByChuZhig.BLL.Services;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
