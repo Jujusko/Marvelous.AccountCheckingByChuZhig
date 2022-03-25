@@ -2,30 +2,44 @@
 using Marvelous.AccountCheckingByChuZhig.BLL.Helpers;
 using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 using Marvelous.AccountCheckingByChuZhig.BLL.Services;
+using RestSharp;
+using Marvelous.AccountCheckingByChuZhig.BLL.Models;
+using Marvelous.AccountCheckingByChuZhig;
 
-Console.WriteLine("Hello, World!");
-ReportService ac = new();
-var asc = ac.GetAllLeads();
+CRMService ac = new();
+//CheckerRules _checkerRules = new CheckerRules();
+//LeadModel lead = new();
+//List<TransactionResponseModel>? transactions = await ac.GetLeadTransactionsForPeriod(3, DateTime.Now.AddDays(-10), DateTime.Now);
 
-//var w =Task.Run(() => first.GetJsonAsync<List<LeadModel>>("https://piter-education.ru:6010/api/Leads/take-from-1-to-20"));
-//Task.WaitAny(w);
-//RestResponse rrr = new();
-//rrr.ResponseUri("https://piter-education.ru:6010/api/Leads/take-from-1-to-20");
-//var r = w.Result;
+//Task task1 = new Task<bool>(() => _checkerRules.CheckLeadBirthday(lead));
+//Task task2 = new Task<bool>(() => _checkerRules.CheckLeadTransactions(transactions));
+//Task task3 = new Task<bool>(() => _checkerRules.CheckDifferenceWithdrawDeposit(transactions));
 
-// IRequestHelper _requestHelper;
-//var response = await _requestHelper
-//    .SendRequest<TransactionRequestModel>(_url, UrlTransaction.Deposit, Method.Post, transactionModel);
+//var test = new TestAsyncs();
+//Task task1 = new Task<bool>(() => test.GetRandomCycle1());
+//Task task2 = new Task<bool>(() => test.GetRandomCycle2());
+//Task task3 = new Task<bool>(() => test.GetRandomCycle3());
 
+//await Task.WhenAny(task1, task2, task3);
 
-var client = new RestClient("https://piter-education.ru:6010/");
-var request = new RestRequest("api/Leads/take-from-{qw}-to-{wq}", Method.Get);
-request.AddUrlSegment("qw", 1);
-request.AddUrlSegment("wq", 20);
-var queryResult = JsonConvert.DeserializeObject<List<LeadModel>>(client.ExecuteAsync<List<LeadModel>>(request).Result.Content);
+// определяем и запускаем задачи
+//var task1 = PrintAsync("Hello C#", 2000);
+//var task2 = PrintAsync("Hello World", 200000);
+//var task3 = PrintAsync("Hello METANIT.COM", 20000);
+
+//// ожидаем завершения хотя бы одной задачи
+//if (await task1 || await task2 || await task3)
+//{
+//    bool result = true;
+//}
+
+//async Task<bool> PrintAsync(string message, int maxdelay)
+//{
+//    await Task.Delay(new Random().Next(1000, 200000));     // имитация продолжительной 
+//    Console.WriteLine(message);
+//    return true;
+//}
+
+await ac.SetRole(3, Marvelous.Contracts.Enums.Role.Regular);
+
 int a = 0;
-foreach(var ase in queryResult)
-{
-    Console.WriteLine(ase.Email);
-    Console.WriteLine();
-}
