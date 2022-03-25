@@ -10,12 +10,10 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Tests
 {
     public class ChekerRulesTests
     {
-        private CheckerRules _checkerRules;
         private LeadModelsForTests _leadModelsForTests;
         [SetUp]
         public void Setup()
         {
-            _checkerRules = new CheckerRules();
             _leadModelsForTests = new LeadModelsForTests();
         }
 

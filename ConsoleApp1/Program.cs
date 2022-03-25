@@ -43,8 +43,3 @@ CRMService ac = new();
 await ac.SetRole(3, Marvelous.Contracts.Enums.Role.Regular);
 
 int a = 0;
-foreach(var ase in queryResult)
-{
-    Console.WriteLine(ase.Email);
-    Console.WriteLine();
-}

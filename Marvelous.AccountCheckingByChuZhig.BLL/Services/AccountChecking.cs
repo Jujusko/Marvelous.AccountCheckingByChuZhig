@@ -27,7 +27,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 
         public async Task<List<LeadModel>> NewGetAllLeads(int start, int amount)
         {
-            RestClient client = new RestClient(ReportUrls.Url);
+            RestClient client = new RestClient(ReportUrls.ReportDomain);
             RestRequest request = new RestRequest(ReportUrls.GetAmountOfLeads, Method.Get);
 
             request.AddUrlSegment("start", start);

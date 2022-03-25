@@ -12,7 +12,6 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Helpers
     {
         public const string CrmDomain = "https://piter-education.ru:5050/";
 
-        
         public static void SetNewRole(int leadId, Role role)
         {
 
