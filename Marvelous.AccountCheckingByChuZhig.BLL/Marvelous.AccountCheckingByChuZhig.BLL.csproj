@@ -8,7 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="Marvelous.Contracts" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="NLog" Version="4.7.14" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="1.7.4" />
+    <PackageReference Include="RestSharp" Version="107.3.0" />
   </ItemGroup>
 
 </Project>

@@ -1,38 +1,56 @@
 ﻿using Marvelous.AccountCheckingByChuZhig.BLL.Extensions;
+using Marvelous.AccountCheckingByChuZhig.BLL.Helpers;
 using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 using Newtonsoft.Json;
+using NLog;
+using RestSharp;
 using System.Net;
 using System.Text.Json;
 
 
 namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
-    public class AccountChecking
+    public class AccountChecking : IAccountChecking
     {
-        public async Task StartTasks(int start, int end)
+        //restsharp асинхронка меньше кода
+
+        private readonly ILogHelper _logger;
+        public AccountChecking(ILogHelper logger)
         {
-            await Task.Run(() => NewGetAllLeads(start, end));
+            _logger = logger;
         }
 
-        public void NewGetAllLeads(int start, int amount)
+        public async Task<List<LeadModel>> StartTasks(int start, int amount)
         {
-            WebRequest myWebRequest = WebRequest.Create($"https://piter-education.ru:6010/api/Leads/take-from-{start}-to-{amount}");
-            WebResponse myWebResponse = myWebRequest.GetResponse();
-            string text;
-            var sr = new StreamReader(myWebResponse.GetResponseStream());
-            text = sr.ReadToEnd();
-            List<LeadModel> result = JsonConvert.DeserializeObject<List<LeadModel>>(text);
-            BirthdayCheck(result);
+            return await Task.Run(() => NewGetAllLeads(start, amount));
         }
 
-        private void BirthdayCheck(List<LeadModel> result)
+        public async Task<List<LeadModel>> NewGetAllLeads(int start, int amount)
+        {
+            RestClient client = new RestClient(ReportUrls.Url);
+            RestRequest request = new RestRequest(ReportUrls.GetAmountOfLeads, Method.Get);
+
+            request.AddUrlSegment("start", start);
+            request.AddUrlSegment("amount", amount);
+            var sres = await client.ExecuteAsync<List<LeadModel>>(request);
+
+            _logger.DoAction($"Try to get Id from rows {start} amount {amount}");//fix it
+
+            var list = sres.Data;
+            
+
+            return /*метод на обработку лида*/list;
+            //return BirthdayCheck(a);
+        }
+
+        private List<LeadModel> BirthdayCheck(List<LeadModel> result)
         {
             var min = DateTime.Now.AddDays(-15);
             var max = DateTime.Now.AddDays(+15);
             var year = DateTime.Now.Year;
-
+            List<LeadModel> changedLeads = new();
             int difference;
-            foreach(var lead in result)
+            foreach (var lead in result)
             {
                 difference = year - lead.BirthDate.Year;
                 DateTime currentLeadBirthday = lead.BirthDate.AddYears(difference);
@@ -42,8 +60,15 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
                     Console.WriteLine(lead.BirthDate);
                     Console.WriteLine("Happy birthday");
                     //запрос в црм, меняем роль лида
+                    changedLeads.Add(lead);
+                    //репортинг дайте мне список лидов с др
+                }
+                else
+                {
+                    Console.WriteLine(lead.BirthDate + " " + Thread.CurrentThread.ManagedThreadId);
                 }
             }
+            return changedLeads;
         }
     }
 }
