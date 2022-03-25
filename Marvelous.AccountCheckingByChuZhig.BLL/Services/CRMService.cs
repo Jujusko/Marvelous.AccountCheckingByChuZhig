@@ -8,10 +8,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Marvelous.Contracts.Enums;
 using RestSharp.Authenticators;
+using Marvelous.Contracts.ExchangeModels;
 
 namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
-    public class CRMService: BaseService
+    public class CRMService : BaseService, ICRMService
     {
         private RestClient _client;
         public CRMService()
@@ -28,7 +29,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
                 .AddUrlSegment("role", (int)role);
 
             await _client.ExecuteAsync(request);
-            
+
         }
 
     }
