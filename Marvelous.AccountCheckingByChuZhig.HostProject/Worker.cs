@@ -1,38 +1,48 @@
+using Marvelous.AccountCheckingByChuZhig.BLL;
+using Marvelous.AccountCheckingByChuZhig.BLL.Helpers;
+using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 using Marvelous.AccountCheckingByChuZhig.BLL.Services;
-
+using NLog;
 namespace Marvelous.AccountCheckingByChuZhig.HostProject
 {
     public class Worker : BackgroundService
     {
-        private readonly ILogger<Worker> _logger;
+        private readonly ILogHelper _log;
 
-        public Worker(ILogger<Worker> logger)
+        public Worker(ILogHelper helper)
         {
-            _logger = logger;
+            _log = helper;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             int i = 0; 
-            AccountChecking ass = new();
-            Task[] tasks = new Task[5];
-            int end = 50;
-            int start = 1;
+            AccountChecking instance = new(_log);
+            List<LeadModel> leadsVip = new();
+            Task<List<LeadModel>>[] tasks = new Task<List<LeadModel>>[5];
+            int amountOfContacts = 20;
+            int firstRow = 1;
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 i++;
-                //if (DateTime.Now.Hour == 3 && DateTime.Now.Minute == 0)
-                //{
+                if (DateTime.Now.Hour == 3 && DateTime.Now.Minute == 0)
+                {
                     for (int j = 0; j < tasks.Count(); j++)
                     {
-                        tasks[j] = ass.StartTasks(start, end);
-                        start += 100;
+                        tasks[j] = instance.StartTasks(firstRow, amountOfContacts);
                     }
                     Task.WaitAll(tasks);
-                    
-                //}
-                await Task.Delay(200, stoppingToken);
-                _logger.LogInformation("Worker running at: {time}", i);
+                    //for(int q = 0; q < tasks.Count(); q++)
+                    //{
+                    //    foreach (var ld in tasks[q].Result)
+                    //        leadsVip.Add(ld);
+                    //}
+                    //arr result
+
+                }
+                await Task.Delay(500, stoppingToken);
+                
             }
         }
     }

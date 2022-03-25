@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using Marvelous.AccountCheckingByChuZhig.BLL.Helpers;
+using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 using Marvelous.AccountCheckingByChuZhig.BLL.Services;
 using RestSharp;
 using Marvelous.AccountCheckingByChuZhig.BLL.Models;
@@ -42,3 +43,8 @@ CRMService ac = new();
 await ac.SetRole(3, Marvelous.Contracts.Enums.Role.Regular);
 
 int a = 0;
+foreach(var ase in queryResult)
+{
+    Console.WriteLine(ase.Email);
+    Console.WriteLine();
+}

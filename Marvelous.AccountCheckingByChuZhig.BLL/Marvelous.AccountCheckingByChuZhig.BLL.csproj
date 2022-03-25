@@ -10,7 +10,10 @@
     <PackageReference Include="AngleSharp" Version="0.16.1" />
     <PackageReference Include="Marvelous.Contracts" Version="1.1.9" />
     <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="161.47008.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="NLog" Version="4.7.14" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="1.7.4" />
     <PackageReference Include="RestSharp" Version="107.3.0" />
   </ItemGroup>
 
