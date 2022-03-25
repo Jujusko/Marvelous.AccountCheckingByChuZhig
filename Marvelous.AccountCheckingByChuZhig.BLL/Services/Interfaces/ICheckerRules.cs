@@ -6,6 +6,6 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
     {
         bool CheckDifferenceWithdrawDeposit(List<TransactionResponseModel> leadTransactionsLastMonth);
         bool CheckLeadBirthday(LeadModel leadModel);
-        bool CheckLeadTransactions(List<TransactionResponseModel> leadTransactions);
+        bool CheckLeadTransactions(int countTransactionsWithoutWithdraw);
     }
 }

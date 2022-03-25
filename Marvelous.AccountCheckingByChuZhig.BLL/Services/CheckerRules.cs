@@ -20,28 +20,21 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             return date >=
                 DateTime.Now.Subtract(TimeSpan.FromDays(14)); //считать заранее при каждом новом запуске
         }
-        public bool CheckLeadTransactions(List<TransactionResponseModel> leadTransactions)
+        public bool CheckLeadTransactions(int countTransactionsWithoutWithdraw)
         {
             int requiredTransactionsNumber = 42;
-            if (leadTransactions.Where(cum => cum.Type != TransactionType.Withdraw.ToString()).Count() < requiredTransactionsNumber)
-                return false;
+            if (countTransactionsWithoutWithdraw >= requiredTransactionsNumber)
+                return true;
 
-            return true;
+            return false;
         }
 
-        public bool CheckDifferenceWithdrawDeposit(List<TransactionResponseModel> leadTransactionsLastMonth)
+        public bool CheckDifferenceWithdrawDeposit(List<TransactionResponseModel> leadTransactionsLastMonthWithdrawDeposit)
         {
             decimal difference = 0;
-            var transactionsWithoutTransfer = leadTransactionsLastMonth.Where(cum => cum.Type != TransactionType.Transfer.ToString());
-
-            foreach (TransactionResponseModel trans in transactionsWithoutTransfer)
+            foreach (TransactionResponseModel trans in leadTransactionsLastMonthWithdrawDeposit)
             {
-                if (trans.Type == TransactionType.Withdraw.ToString())
-                    difference -= trans.Amount * trans.RubRate;
-
-                else
-                    difference += trans.Amount * trans.RubRate;
-
+                difference += trans.Amount * trans.RubRate;
             }
 
             if (difference > 13000 || difference < -13000)

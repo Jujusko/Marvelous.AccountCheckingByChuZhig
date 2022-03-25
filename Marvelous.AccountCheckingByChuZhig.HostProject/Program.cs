@@ -6,6 +6,7 @@ using Marvelous.AccountCheckingByChuZhig.BLL;
 using Microsoft.Extensions.DependencyInjection;
 using NLog.Extensions.Logging;
 using Marvelous.AccountCheckingByChuZhig.BLL.Services;
+using Marvelous.AccountCheckingByChuZhig.HostProject.Producers;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
@@ -15,7 +16,7 @@ IHost host = Host.CreateDefaultBuilder(args)
          .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
          .Build();
         services.AddHostedService<Worker>();
-        //services.AddSingleton<IAccountChecking, AccountChecking>();
+        services.AddSingleton<ILeadProducer, LeadProducer>();
         services.AddSingleton<ILogHelper, LogHelper>()
         .AddLogging(loggingBuilder =>
         {

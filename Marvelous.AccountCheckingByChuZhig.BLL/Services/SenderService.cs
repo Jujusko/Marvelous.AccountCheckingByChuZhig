@@ -28,9 +28,9 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             return checkBirthday.Result;
         }
 
-        public async Task<bool> StartCheckCountLeadTransactions(List<TransactionResponseModel> transactions)
+        public async Task<bool> StartCheckCountLeadTransactions(int countTransactions)
         {
-            Task<bool> checkTransactionsCount = new Task<bool>(() => _checkerRules.CheckLeadTransactions(transactions));
+            Task<bool> checkTransactionsCount = new Task<bool>(() => _checkerRules.CheckLeadTransactions(countTransactions));
             await checkTransactionsCount;
             return checkTransactionsCount.Result;
         }
