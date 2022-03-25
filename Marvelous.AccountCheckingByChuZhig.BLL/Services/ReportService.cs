@@ -2,36 +2,29 @@
 using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 using Marvelous.Contracts;
 using Newtonsoft.Json;
+using RestSharp;
 using System.Net;
 using System.Text.Json;
 
 namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
-    public class ReportService: BaseService
+    public class ReportService : BaseService
     {
-        public List<LeadModel> GetAllLeads()
+        public ReportService()
         {
-            WebRequest myWebRequest = WebRequest.Create($"{ReportUrls.GetLeads()}");
-            WebResponse myWebResponse = myWebRequest.GetResponse();
-
-            string text;
-            using (var sr = new StreamReader(myWebResponse.GetResponseStream()))
-            {
-                text = sr.ReadToEnd();
-            }
-            List<LeadModel> result = JsonConvert.DeserializeObject<List<LeadModel>>(text);
-            return result;
+            _domain = ReportUrls.ReportDomain;
         }
 
-        public List<TransactionModel> GetLeadTransactionsForPeriod(int leadId, DateTime startDate, DateTime endDate)
+        public async Task<List<TransactionResponseModel>?> GetLeadTransactionsForPeriod(int leadId, DateTime startDate, DateTime endDate)
         {
-            string url = $"{ReportUrls.GetLeadTransactionsForPeriod(leadId, startDate, endDate)}";
-            
-            string text = GetJsonResponse(url);
-            
-            List<TransactionModel> result = JsonConvert.DeserializeObject<List<TransactionModel>>(text);
-            return result;
+            //var client = new RestClient("https://piter-education.ru:6010/");
+            var request = new RestRequest("api/Transactions/by-lead-id/in-range/", Method.Get)
+                .AddParameter("leadId", leadId)
+                .AddParameter("startDate", startDate.ToString("s"))
+                .AddParameter("endDate", endDate.ToString("s"));
+
+            return GetResponseAsync<List<TransactionResponseModel>>(request).Result.Data;
         }
-        
+
     }
 }

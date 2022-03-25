@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using Marvelous.AccountCheckingByChuZhig.BLL.Helpers;
 using System.Threading.Tasks;
+using Marvelous.Contracts.Enums;
 
 namespace Marvelous.AccountCheckingByChuZhig.BLL.Tests
 {

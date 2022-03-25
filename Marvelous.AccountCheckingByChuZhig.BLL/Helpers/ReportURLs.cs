@@ -8,6 +8,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Helpers
 {
     public static class ReportUrls
     {
+        public const string ReportDomain = "https://piter-education.ru:6010/";
         public static string GetLeads()
         {
             return "https://piter-education.ru:6010/api/leads";

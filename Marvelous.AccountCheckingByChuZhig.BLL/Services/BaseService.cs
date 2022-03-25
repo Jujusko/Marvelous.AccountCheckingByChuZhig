@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RestSharp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -9,14 +10,12 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
     public abstract class BaseService
     {
-        protected string GetJsonResponse(string url)
+        protected string _domain;
+        protected async Task<RestResponse<T>> GetResponseAsync<T>(RestRequest request)
         {
-            WebRequest webRequest = WebRequest.Create(url);
-            WebResponse webResponse = webRequest.GetResponse();
-
-            using StreamReader sr = new(webResponse.GetResponseStream());
-
-            return sr.ReadToEnd();
+            var client = new RestClient(_domain);
+            return await client.ExecuteAsync<T>(request);
         }
+
     }
 }

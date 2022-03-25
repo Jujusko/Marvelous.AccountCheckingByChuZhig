@@ -1,11 +1,11 @@
 ﻿using Marvelous.AccountCheckingByChuZhig.BLL.Models;
-using Marvelous.Contracts;
 using System.Net;
 using AngleSharp;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Data;
 using System.Text;
+using Marvelous.Contracts.Enums;
 
 namespace Marvelous.AccountCheckingByChuZhig.BLL.Helpers
 {

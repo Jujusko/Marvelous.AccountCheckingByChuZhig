@@ -1,4 +1,5 @@
 ﻿using Marvelous.AccountCheckingByChuZhig.BLL.Models;
+using Marvelous.AccountCheckingByChuZhig.BLL.Worker;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,26 +12,16 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
     public class SenderService
     {
-        public void SendMail(MessageModel messageModel)
+        private readonly ICheckerRules _checkerRules;
+        public SenderService(ICheckerRules checkerRules)
         {
-            // отправитель - устанавливаем адрес и отображаемое в письме имя
-            MailAddress from = new MailAddress("golenkotoxa@gmail.com", "Tom");
-            // кому отправляем
-            MailAddress to = new MailAddress("goltoha@mail.ru");
-            // создаем объект сообщения
-            MailMessage m = new MailMessage(from, to);
-            // тема письма
-            m.Subject = "Тест";
-            // текст письма
-            m.Body = "<h2>Письмо-тест работы smtp-клиента</h2>";
-            // письмо представляет код html
-            m.IsBodyHtml = true;
-            // адрес smtp-сервера и порт, с которого будем отправлять письмо
-            SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587);
-            // логин и пароль
-            smtp.Credentials = new NetworkCredential("golenkotoxa@gmail.com", "golenkotoxa");
-            smtp.EnableSsl = true;
-            smtp.Send(m);
+            _checkerRules = checkerRules;
+        }
+
+        public async Task StartCheck(LeadModel lead)
+        {
+            Task checkBirthday = new Task(() => _checkerRules.CheckLeadBirthday(lead));
+            await checkBirthday;
         }
     }
 }
