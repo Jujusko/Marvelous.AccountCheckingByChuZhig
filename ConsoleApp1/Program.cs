@@ -2,12 +2,10 @@
 using Marvelous.AccountCheckingByChuZhig.BLL.Helpers;
 using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 using Marvelous.AccountCheckingByChuZhig.BLL.Services;
-using Newtonsoft.Json;
-using RestSharp;
 
-//Console.WriteLine("Hello, World!");
-//RestRequest qwe = new("https://piter-education.ru:6010/api/Leads/take-from-1-to-20");
-//RestClient first = new RestClient();
+Console.WriteLine("Hello, World!");
+ReportService ac = new();
+var asc = ac.GetAllLeads();
 
 //var w =Task.Run(() => first.GetJsonAsync<List<LeadModel>>("https://piter-education.ru:6010/api/Leads/take-from-1-to-20"));
 //Task.WaitAny(w);
