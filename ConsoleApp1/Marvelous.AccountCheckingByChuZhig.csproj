@@ -8,11 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.16.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="NLog" Version="4.7.14" />
+    <PackageReference Include="RestSharp" Version="107.3.0" />
+    <PackageReference Include="RestSharp.Serializers.NewtonsoftJson" Version="107.3.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Marvelous.AccountCheckingByChuZhig.BLL.Tests\Marvelous.AccountCheckingByChuZhig.BLL.Tests.csproj" />
     <ProjectReference Include="..\Marvelous.AccountCheckingByChuZhig.BLL\Marvelous.AccountCheckingByChuZhig.BLL.csproj" />
   </ItemGroup>
 

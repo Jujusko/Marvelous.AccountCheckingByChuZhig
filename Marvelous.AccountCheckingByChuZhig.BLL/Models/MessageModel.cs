@@ -11,7 +11,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Models
         public MessageModel(LeadModel lead)
         {
             Lead = lead;
-            Message = $"Здарова {lead.Name})) Ваш статус изменился на {lead.Role.ToString()}";
+            //Message = $"Здарова {lead.Name})) Ваш статус изменился на {lead.Role.ToString()}";
         }
 
         public LeadModel Lead { get; set; }
