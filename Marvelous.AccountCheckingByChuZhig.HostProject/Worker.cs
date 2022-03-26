@@ -4,6 +4,7 @@ using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 using Marvelous.AccountCheckingByChuZhig.BLL.Services;
 using Marvelous.AccountCheckingByChuZhig.HostProject.Producers;
 using NLog;
+using Marvelous.Contracts;
 namespace Marvelous.AccountCheckingByChuZhig.HostProject
 {
     public class Worker : BackgroundService
@@ -23,29 +24,48 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             AccountChecking instance = new(_log);
             List<LeadModel> leadsVip = new();
             Task<List<LeadModel>>[] tasks = new Task<List<LeadModel>>[5];
+
             int amountOfContacts = 20;
             int firstRow = 1;
-
+            int maxCount = 10000;//from report stprocedure
+            string role;
+            bool endLead = false;
             while (!stoppingToken.IsCancellationRequested)
             {
                 i++;
-                await _leadProducer.SendMessage(3, Contracts.Enums.Role.Vip);
-                //if (DateTime.Now.Hour == 3 && DateTime.Now.Minute == 0)
-                //{
-                //    for (int j = 0; j < tasks.Count(); j++)
-                //    {
-                //        tasks[j] = instance.StartTasks(firstRow, amountOfContacts);
-                //    }
-                //    Task.WaitAll(tasks);
-                //    //for(int q = 0; q < tasks.Count(); q++)
-                //    //{
-                //    //    foreach (var ld in tasks[q].Result)
-                //    //        leadsVip.Add(ld);
-                //    //}
-                //    //arr result
+                Console.WriteLine(DateTime.Now);
+                if (DateTime.Now.Hour == 15 && DateTime.Now.Minute == 29)
+                    endLead = true;
+                if (endLead)
+                {
+                    _log.DoAction("Service started to check all leads");
+                    while (firstRow + amountOfContacts < maxCount)
+                    {
+                        for (int j = 0; j < tasks.Count(); j++)
+                        {
+                            tasks[j] = instance.StartTasks(firstRow, amountOfContacts);
+                            firstRow += amountOfContacts;
+                        }
 
-                //}
-                await Task.Delay(500000, stoppingToken);
+                        Task.WaitAll(tasks);
+                        for (int q = 0; q < tasks.Count(); q++)
+                        {
+                            foreach (var ld in tasks[q].Result)
+                            {
+                                leadsVip.Add(ld);
+                                if (ld.Role == Contracts.Enums.Role.Regular.ToString())
+                                    role = Contracts.Enums.Role.Vip.ToString();
+                                else
+                                    role = Contracts.Enums.Role.Regular.ToString();
+                                _log.DoAction($"Leads role with ID {ld.Id} changed from {ld.Role} to {role}");
+                            }
+                        }
+                        //arr result
+                    }
+                    _log.DoAction("Service end to check all leads");
+                    endLead = false;
+                }
+                await Task.Delay(1000, stoppingToken);
                 
             }
         }

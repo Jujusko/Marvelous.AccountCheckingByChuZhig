@@ -34,7 +34,6 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             request.AddUrlSegment("amount", amount);
             var sres = await client.ExecuteAsync<List<LeadModel>>(request);
 
-            _logger.DoAction($"Try to get Id from rows {start} amount {amount}");//fix it
 
             var list = sres.Data;
             
