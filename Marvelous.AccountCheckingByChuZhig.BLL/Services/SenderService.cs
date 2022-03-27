@@ -30,7 +30,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 
         public async Task<bool> StartCheckCountLeadTransactions(int countTransactions)
         {
-            Task<bool> checkTransactionsCount = new Task<bool>(() => _checkerRules.CheckLeadTransactions(countTransactions));
+            Task<bool> checkTransactionsCount = new Task<bool>(() => _checkerRules.CheckCountLeadTransactions(countTransactions));
             await checkTransactionsCount;
             return checkTransactionsCount.Result;
         }

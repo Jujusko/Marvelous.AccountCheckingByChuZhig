@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
-    public class ReportService : BaseService
+    public class ReportService : BaseService, IReportService
     {
         private readonly ILogHelper _logger;
         public ReportService(ILogHelper logger)

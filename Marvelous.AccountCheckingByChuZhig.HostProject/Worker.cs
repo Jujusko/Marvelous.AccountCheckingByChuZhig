@@ -11,11 +11,13 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
     {
         private readonly ILogHelper _log;
         private readonly ILeadProducer _leadProducer;
+        private readonly IReportService _reportService;
 
-        public Worker(ILogHelper helper, ILeadProducer leadProducer)
+        public Worker(ILogHelper helper, ILeadProducer leadProducer, IReportService reportService)
         {
             _log = helper;
             _leadProducer = leadProducer;
+            _reportService = reportService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -68,6 +70,17 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
                 await Task.Delay(1000, stoppingToken);
                 
             }
+        }
+
+        public void StartCheck(LeadModel lead)
+        {
+            CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+            CheckerRules checkerRules = new(cancelTokenSource);
+
+            Parallel.Invoke( new ParallelOptions { CancellationToken = cancelTokenSource.Token },
+                            () => checkerRules.CheckLeadBirthday(lead),
+                            () => checkerRules.CheckCountLeadTransactions(42),
+                            () => checkerRules.CheckDifferenceWithdrawDeposit(new List<TransactionResponseModel>()));
         }
     }
 }
