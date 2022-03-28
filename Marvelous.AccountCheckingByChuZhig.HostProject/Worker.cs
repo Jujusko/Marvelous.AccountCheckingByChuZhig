@@ -22,65 +22,91 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            int i = 0; 
-            AccountChecking instance = new(_log);
-            List<LeadModel> leadsVip = new();
-            Task<List<LeadModel>>[] tasks = new Task<List<LeadModel>>[5];
+            //int i = 0; 
+            //AccountChecking instance = new(_log);
+            //List<LeadModel> leadsVip = new();
+            //Task<List<LeadModel>>[] tasks = new Task<List<LeadModel>>[5];
 
-            int amountOfContacts = 20;
-            int firstRow = 1;
-            int maxCount = 10000;//from report stprocedure
-            string role;
-            bool endLead = false;
-            while (!stoppingToken.IsCancellationRequested)
+            //int amountOfContacts = 20;
+            //int firstRow = 1;
+            //int maxCount = 10000;//from report stprocedure
+            //string role;
+            //bool endLead = false;
+            //while (!stoppingToken.IsCancellationRequested)
+            //{
+            List<LeadModel> leads = new List<LeadModel>
             {
-                i++;
-                Console.WriteLine(DateTime.Now);
-                if (DateTime.Now.Hour == 15 && DateTime.Now.Minute == 29)
-                    endLead = true;
-                if (endLead)
-                {
-                    _log.DoAction("Service started to check all leads");
-                    while (firstRow + amountOfContacts < maxCount)
-                    {
-                        for (int j = 0; j < tasks.Count(); j++)
-                        {
-                            tasks[j] = instance.StartTasks(firstRow, amountOfContacts);
-                            firstRow += amountOfContacts;
-                        }
+                new LeadModel { Id=5, BirthDate = new DateTime(2002, 3, 15)},
+                new LeadModel { Id=2, BirthDate = new DateTime(2002, 3, 3)},
+                new LeadModel { Id=3, BirthDate = new DateTime(2002, 9, 15)},
+                new LeadModel { Id=7, BirthDate = new DateTime(1980, 3, 25)}
+            };
+            Parallel.ForEach(leads, /*async*/ lead => /*await */StartCheckAsync(lead));
+            //i++;
+            //Console.WriteLine(DateTime.Now);
+            //if (DateTime.Now.Hour == 15 && DateTime.Now.Minute == 29)
+            //    endLead = true;
+            //if (endLead)
+            //{
+            //    _log.DoAction("Service started to check all leads");
+            //    while (firstRow + amountOfContacts < maxCount)
+            //    {
+            //        for (int j = 0; j < tasks.Count(); j++)
+            //        {
+            //            tasks[j] = instance.StartTasks(firstRow, amountOfContacts);
+            //            firstRow += amountOfContacts;
+            //        }
 
-                        Task.WaitAll(tasks);
-                        for (int q = 0; q < tasks.Count(); q++)
-                        {
-                            foreach (var ld in tasks[q].Result)
-                            {
-                                leadsVip.Add(ld);
-                                if (ld.Role == Contracts.Enums.Role.Regular.ToString())
-                                    role = Contracts.Enums.Role.Vip.ToString();
-                                else
-                                    role = Contracts.Enums.Role.Regular.ToString();
-                                _log.DoAction($"Leads role with ID {ld.Id} changed from {ld.Role} to {role}");
-                            }
-                        }
-                        //arr result
-                    }
-                    _log.DoAction("Service end to check all leads");
-                    endLead = false;
-                }
-                await Task.Delay(1000, stoppingToken);
-                
-            }
+            //        Task.WaitAll(tasks);
+            //        for (int q = 0; q < tasks.Count(); q++)
+            //        {
+            //            foreach (var ld in tasks[q].Result)
+            //            {
+            //                leadsVip.Add(ld);
+            //                if (ld.Role == Contracts.Enums.Role.Regular.ToString())
+            //                    role = Contracts.Enums.Role.Vip.ToString();
+            //                else
+            //                    role = Contracts.Enums.Role.Regular.ToString();
+            //                _log.DoAction($"Leads role with ID {ld.Id} changed from {ld.Role} to {role}");
+            //            }
+            //        }
+            //        //arr result
+            //    }
+            //    _log.DoAction("Service end to check all leads");
+            //    endLead = false;
+            //}
+            // await Task.Delay(1000, stoppingToken);
+
+            //}
         }
 
-        public void StartCheck(LeadModel lead)
+        public void StartCheckAsync(LeadModel lead)
         {
+            int? numTask = Task.CurrentId;
+            Console.WriteLine("Поток номер - " + numTask + " запущен. Лид " + lead.Id);
             CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-            CheckerRules checkerRules = new(cancelTokenSource);
+            CheckerRules checkerRules = new(cancelTokenSource, lead);
+            //var countTransactions = await _reportService.GetCountLeadTransactionsWithoutWithdraw(lead.Id);
+            //var trans = await _reportService.GetLeadTransactionsForPeriod(lead.Id, DateTime.Now.AddDays(-10), DateTime.Now);
 
-            Parallel.Invoke( new ParallelOptions { CancellationToken = cancelTokenSource.Token },
-                            () => checkerRules.CheckLeadBirthday(lead),
-                            () => checkerRules.CheckCountLeadTransactions(42),
-                            () => checkerRules.CheckDifferenceWithdrawDeposit(new List<TransactionResponseModel>()));
+            //запуск проверок в разных потоках
+            try
+            {
+                Parallel.Invoke(new ParallelOptions { CancellationToken = cancelTokenSource.Token },
+                                () => checkerRules.CheckLeadBirthday(lead),
+                                async () => checkerRules.CheckCountLeadTransactions(await _reportService.GetCountLeadTransactionsWithoutWithdraw(lead.Id)),
+                                async () => checkerRules.CheckDifferenceWithdrawDeposit(await _reportService.GetLeadTransactionsForPeriod(lead.Id, DateTime.Now.AddDays(-10), DateTime.Now)));
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Поток номер - " + numTask + " отработал корректно");
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Перехвачена "+ex.Message+" остановка потока " + numTask + " на лиде " + lead.Id /*+ " " + lead.BirthDate.ToString("D")*/);
+                Console.ResetColor();
+                cancelTokenSource.Dispose();//освобождение потоков
+            }
         }
     }
 }

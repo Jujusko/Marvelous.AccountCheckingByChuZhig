@@ -6,5 +6,6 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
     {
         Task<List<TransactionResponseModel>?> GetLeadTransactionsForPeriod(int leadId, DateTime startDate, DateTime endDate);
         Task<List<LeadModel>?> NewGetAllLeads(int start, int amount);
+        Task<int> GetCountLeadTransactionsWithoutWithdraw(int leadId);
     }
 }

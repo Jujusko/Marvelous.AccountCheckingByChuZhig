@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Marvelous.AccountCheckingByChuZhig.BLL;
 using NLog.Extensions.Logging;
 using Marvelous.AccountCheckingByChuZhig.HostProject.Producers;
+using Marvelous.AccountCheckingByChuZhig.BLL.Services;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
@@ -14,7 +15,8 @@ IHost host = Host.CreateDefaultBuilder(args)
          .Build();
         services.AddHostedService<Worker>();
         services.AddSingleton<ILeadProducer, LeadProducer>();
-        services.AddSingleton<ILogHelper, LogHelper>()
+        services.AddSingleton<ILogHelper, LogHelper>();
+        services.AddSingleton<IReportService, ReportService>()
         .AddLogging(loggingBuilder =>
         {
             // configure Logging with NLog
