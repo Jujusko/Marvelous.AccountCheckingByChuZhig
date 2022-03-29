@@ -14,6 +14,6 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Models
         public decimal Amount { get; set; }
         public int AccountId { get; set; }
         public string Currency { get; set; }
-        public decimal RubRate { get; set; }
+        public decimal Rate { get; set; }
     }
 }

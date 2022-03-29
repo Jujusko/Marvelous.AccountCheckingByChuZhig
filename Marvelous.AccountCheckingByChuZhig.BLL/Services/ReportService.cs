@@ -47,7 +47,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             //return BirthdayCheck(a);
         }
 
-        public async Task<int> GetCountLeadTransactionsWithoutWithdraw(int leadId)
+        public async Task<int> GetCountRANDOmLeadTransactionsWithoutWithdraw(int leadId)
         {
             Console.WriteLine("Получение РАНДОМНОГО кол-ва транзакций лида " + leadId);
             Random random = new Random();
@@ -56,7 +56,26 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             return countTransactions;
         }
 
+        public async Task<int> GetCountLeadTransactionsWithoutWithdrawal(int leadId, DateTime startDate)
+        {
+            Console.WriteLine("Скачивание КОЛ-ВА транзакций лида " + leadId);
+            var request = new RestRequest("api/Transactions/count-transaction-without-withdrawal/", Method.Get)
+                .AddParameter("leadId", leadId)
+                .AddParameter("startDate", startDate.ToString("s"));
+            var result = await GetResponseAsync<int>(request);
+            Console.WriteLine("У лида " + leadId + " КОЛ-ВО транзакций " + result.Data);
+            return result.Data;
+        }
 
+        public async Task<List<TransactionResponseModel>?> GetLeadTransactionsDepositWithdrawForLastMonth(int leadId)
+        {
+            Console.WriteLine("СКАЧИВАНИЕ транзакций лида с айди " + leadId);
+            var request = new RestRequest("api/Transactions/by-leadId-last-month/", Method.Get)
+                .AddParameter("leadId", leadId);
+            var result = await GetResponseAsync<List<TransactionResponseModel>>(request);
+            Console.WriteLine("Транзакции СКАЧАНЫ у лида с айди " + leadId + " их " + result.Data.Count());
+            return result.Data;
+        }
 
     }
 }

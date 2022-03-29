@@ -94,8 +94,8 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             {
                 Parallel.Invoke(new ParallelOptions { CancellationToken = cancelTokenSource.Token },
                                 () => checkerRules.CheckLeadBirthday(lead),
-                                async () => checkerRules.CheckCountLeadTransactions(await _reportService.GetCountLeadTransactionsWithoutWithdraw(lead.Id)),
-                                async () => checkerRules.CheckDifferenceWithdrawDeposit(await _reportService.GetLeadTransactionsForPeriod(lead.Id, DateTime.Now.AddDays(-10), DateTime.Now)));
+                                async () => checkerRules.CheckCountLeadTransactions(await _reportService.GetCountLeadTransactionsWithoutWithdrawal(lead.Id, DateTime.Now.AddMonths(-2))),
+                                async () => checkerRules.CheckDifferenceWithdrawDeposit(await _reportService.GetLeadTransactionsDepositWithdrawForLastMonth(lead.Id)));
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("Поток номер - " + numTask + " отработал корректно");
                 Console.ResetColor();

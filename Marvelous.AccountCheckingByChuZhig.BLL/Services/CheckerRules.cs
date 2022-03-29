@@ -39,7 +39,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 
         }
 
-        public bool CheckDifferenceWithdrawDeposit(List<TransactionResponseModel> leadTransactionsLastMonthWithdrawDeposit)
+        public bool CheckDifferenceWithdrawDeposit(List<TransactionResponseModel>? leadTransactionsLastMonthWithdrawDeposit)
         {
 
             if (leadTransactionsLastMonthWithdrawDeposit is null || leadTransactionsLastMonthWithdrawDeposit.Count == 0)
@@ -57,7 +57,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
                     break;
                 }
 
-                difference += trans.Amount; //* trans.RubRate;
+                difference += trans.Amount * trans.Rate;
             }
             var result = difference > 13000 || difference < -13000; //Настройка от Алёны 13000
             if (!result)
@@ -70,7 +70,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 
         private void CancelToken(bool result, string message)
         {
-            if (result)
+            if (result && !_cancellationTokenSource.IsCancellationRequested)
             {
                 _cancellationTokenSource.Cancel();
                 Console.ForegroundColor = ConsoleColor.Yellow;
