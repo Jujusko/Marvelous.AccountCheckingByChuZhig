@@ -37,10 +37,11 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject.Producers
             await busControl.StartAsync(source.Token);
             try
             {
-                await busControl.Publish<ILeadShortExchangeModel>(new
+                await busControl.Publish<LeadShortExchangeModel>(new
                 {
                     Id = leadId,
-                    Role = role
+                    Role = role,
+                    Email = "LOSHARA"
                 });
 
             }

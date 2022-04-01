@@ -22,6 +22,7 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            #region DD
             //int i = 0; 
             //AccountChecking instance = new(_log);
             //List<LeadModel> leadsVip = new();
@@ -34,14 +35,19 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             //bool endLead = false;
             //while (!stoppingToken.IsCancellationRequested)
             //{
-            List<LeadModel> leads = new List<LeadModel>
-            {
-                new LeadModel { Id=5, BirthDate = new DateTime(2002, 3, 15)},
-                new LeadModel { Id=2, BirthDate = new DateTime(2002, 3, 3)},
-                new LeadModel { Id=3, BirthDate = new DateTime(2002, 9, 15)},
-                new LeadModel { Id=7, BirthDate = new DateTime(1980, 3, 25)}
-            };
-            Parallel.ForEach(leads, /*async*/ lead => /*await */StartCheckAsync(lead));
+            #endregion
+            /*
+             получать в потоках первого уровн€ пачками лидов
+             дл€ каждого потока создавать лист лидов, у которых что-то может помен€тьс€
+             прогон€ть их через StartCheckAsync в потоках второго уровн€
+             в потоках третьего уровн€ смотреть правила, и если там где-то выпал TRUE, то ставить Vip, если не стоит
+             после потоков третьего уровн€...
+             */
+            List<LeadModel> leadsVip = new();
+            CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+            List<LeadModel>? leadsForCheck = await _reportService.NewGetAllLeads(0, 5, cancelTokenSource);
+            ParallelLoopResult result = Parallel.ForEach(leadsForCheck, lead => StartCheckAsync(lead));
+            #region DD2
             //i++;
             //Console.WriteLine(DateTime.Now);
             //if (DateTime.Now.Hour == 15 && DateTime.Now.Minute == 29)
@@ -78,34 +84,46 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             // await Task.Delay(1000, stoppingToken);
 
             //}
+            #endregion
         }
 
-        public void StartCheckAsync(LeadModel lead)
+        public async Task StartCheckAsync(LeadModel lead)
         {
-            int? numTask = Task.CurrentId;
-            Console.WriteLine("ѕоток номер - " + numTask + " запущен. Ћид " + lead.Id);
+            //int? numTask = Task.CurrentId;
+            //Console.WriteLine("ѕоток номер - " + numTask + " запущен. Ћид " + lead.Id);
             CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-            CheckerRules checkerRules = new(cancelTokenSource, lead);
-            //var countTransactions = await _reportService.GetCountLeadTransactionsWithoutWithdraw(lead.Id);
-            //var trans = await _reportService.GetLeadTransactionsForPeriod(lead.Id, DateTime.Now.AddDays(-10), DateTime.Now);
 
-            //запуск проверок в разных потоках
+            CheckerRules checkerRules = new(cancelTokenSource, lead);
             try
             {
-                Parallel.Invoke(new ParallelOptions { CancellationToken = cancelTokenSource.Token },
-                                () => checkerRules.CheckLeadBirthday(lead),
-                                async () => checkerRules.CheckCountLeadTransactions(await _reportService.GetCountLeadTransactionsWithoutWithdrawal(lead.Id, DateTime.Now.AddMonths(-2))),
-                                async () => checkerRules.CheckDifferenceWithdrawDeposit(await _reportService.GetLeadTransactionsDepositWithdrawForLastMonth(lead.Id)));
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("ѕоток номер - " + numTask + " отработал корректно");
-                Console.ResetColor();
+                Task t3 = Task.Run(async () => checkerRules.CheckDifferenceWithdrawDeposit(await _reportService.GetLeadTransactionsDepositWithdrawForLastMonth(lead.Id, cancelTokenSource)), cancelTokenSource.Token);
+                Task t1 = Task.Run(() => checkerRules.CheckLeadBirthday(lead), cancelTokenSource.Token);
+                Task t2 = Task.Run(async () => checkerRules.CheckCountLeadTransactions(await _reportService.GetCountLeadTransactionsWithoutWithdrawal(lead.Id, DateTime.Now.AddMonths(-2), cancelTokenSource)), cancelTokenSource.Token);
+                
+
+                Task[] tasks = { t1, t2, t3 };
+
+                //Parallel.Invoke(new ParallelOptions { CancellationToken = cancelTokenSource.Token },
+                //                () => checkerRules.CheckLeadBirthday(lead),
+                //                async () => checkerRules.CheckCountLeadTransactions(await _reportService.GetCountLeadTransactionsWithoutWithdrawal(lead.Id, DateTime.Now.AddMonths(-2), cancelTokenSource)),
+                //                async () => checkerRules.CheckDifferenceWithdrawDeposit(await _reportService.GetLeadTransactionsDepositWithdrawForLastMonth(lead.Id, cancelTokenSource)));
+                //Console.ForegroundColor = ConsoleColor.Green;
+                //Console.WriteLine("ѕоток номер - " + numTask + " отработал корректно");
+                //Console.ResetColor();
+                await Task.WhenAll(tasks);
+                Console.WriteLine("–езультат проверки лида с ID = " + lead.Id + ": " + checkerRules.DeservesToBeVip);
+
             }
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("ѕерехвачена "+ex.Message+" остановка потока " + numTask + " на лиде " + lead.Id /*+ " " + lead.BirthDate.ToString("D")*/);
+                Console.WriteLine("ѕерехвачена " + ex.Message + " остановка потока " + " на лиде " + lead.Id);
                 Console.ResetColor();
                 cancelTokenSource.Dispose();//освобождение потоков
+            }
+            finally
+            {
+                //cancelTokenSource.Token.Register(() => Console.WriteLine("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa"));
             }
         }
     }

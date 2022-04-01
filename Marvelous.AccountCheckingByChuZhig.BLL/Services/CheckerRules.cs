@@ -14,27 +14,31 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
     {
         private CancellationTokenSource _cancellationTokenSource;
         private LeadModel _model;
+        public bool DeservesToBeVip { get; private set; }
+        private const int _daysAfterBirthday = 14;
+        private const int _requiredTransactionsNumberInTwoLastMonths = 42;
+        private const decimal _requiredDifferenceWthdrawDeposit = 13000m;
         public CheckerRules(CancellationTokenSource cancellationTokenSource, LeadModel lead)
         {
             _cancellationTokenSource = cancellationTokenSource;
             _model = lead;
+            DeservesToBeVip = false;
         }
 
         public bool CheckLeadBirthday(LeadModel leadModel)
         {
             int yearDifference = DateTime.Now.Year - leadModel.BirthDate.Year;
             DateTime date = leadModel.BirthDate.AddYears(yearDifference);
-            var ddd = DateTime.Now.Subtract(date).Days;
-            var result = ddd >= 0 && ddd<=14; //Настройка от Алёны 14
+            var daysAfterBirthday = DateTime.Now.Subtract(date).Days;
+            var result = daysAfterBirthday >= 0 && daysAfterBirthday <= _daysAfterBirthday;
 
-            CancelToken(result, "ДНЮХА у лида " + _model.Id /*+ " " + _model.BirthDate.ToString("D")*/);
+            CancelToken(result, "ДНЮХА у лида " + _model.Id );
             return result;
         }
         public bool CheckCountLeadTransactions(int countTransactionsWithoutWithdraw)
         {
-            int requiredTransactionsNumber = 42; //Настройка от Алёны 42
-            var result = countTransactionsWithoutWithdraw >= requiredTransactionsNumber;
-            CancelToken(result, "КОЛИЧЕСТВО транзакций у лида " + _model.Id /*+ " " + _model.BirthDate.ToString("D")*/);
+            var result = countTransactionsWithoutWithdraw >= _requiredTransactionsNumberInTwoLastMonths;
+            CancelToken(result, "КОЛИЧЕСТВО транзакций у лида " + _model.Id );
             return result;
 
         }
@@ -53,18 +57,18 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             {
                 if (_cancellationTokenSource.IsCancellationRequested)
                 {
-                    Console.WriteLine("Пересчёт транзакций лида " + _model.Id + /*" " + _model.BirthDate.ToString("D") +*/ "  остановлен");
+                    Console.WriteLine("Пересчёт транзакций лида " + _model.Id + "  остановлен");
                     break;
                 }
 
                 difference += trans.Amount * trans.Rate;
             }
-            var result = difference > 13000 || difference < -13000; //Настройка от Алёны 13000
+            var result = difference > _requiredDifferenceWthdrawDeposit || difference < -_requiredDifferenceWthdrawDeposit;
             if (!result)
             {
-                Console.WriteLine("Маленькая СУММА " + difference + " у лида " + _model.Id);
+                Console.WriteLine("МАЛАЯ суММА " + difference + " у лида " + _model.Id);
             }
-            CancelToken(result, "СУММА " + difference + " у лида " + _model.Id /*+ " " + _model.BirthDate.ToString("D")*/);
+            CancelToken(result, "ДОСТАТОЧНАЯ суММА " + difference + " у лида " + _model.Id );
             return result;
         }
 
@@ -72,6 +76,12 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
         {
             if (result && !_cancellationTokenSource.IsCancellationRequested)
             {
+                //if (_model.Role != Role.Vip.ToString())
+                //{
+                // поменять роль какой-нибудь LeadSendModel, в лог записать message почему роль измнилась
+                //тогда может и не нужно булевые значения в тасках проверок возвращать
+                //}
+                DeservesToBeVip = true;
                 _cancellationTokenSource.Cancel();
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("Поток остановлен " + message);

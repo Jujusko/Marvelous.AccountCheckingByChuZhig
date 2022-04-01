@@ -17,6 +17,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             _logger = logger;
         }
 
+        #region AUF выкатываем со дворов
         public async Task<List<TransactionResponseModel>?> GetLeadTransactionsForPeriod(int leadId, DateTime startDate, DateTime endDate)
         {
             Console.WriteLine("СКАЧИВАНИЕ транзакций лида с айди " + leadId);
@@ -24,27 +25,25 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
                 .AddParameter("leadId", leadId)
                 .AddParameter("startDate", startDate.ToString("s"))
                 .AddParameter("endDate", endDate.ToString("s"));
-            var result = await GetResponseAsync<List<TransactionResponseModel>>(request);
+            var result = await GetResponseAsync<List<TransactionResponseModel>>(request, new CancellationTokenSource());
             Console.WriteLine("Транзакции СКАЧАНЫ у лида с айди " + leadId + " их " + result.Data.Count());
             return result.Data;
         }
 
-        public async Task<List<LeadModel>?> NewGetAllLeads(int start, int amount)
+
+        public async Task<List<LeadModel>?> NewGetAllLeads(int start, int amount, CancellationTokenSource cancellationTokenSource)
         {
-            RestClient client = new RestClient(ReportUrls.ReportDomain);
-            RestRequest request = new RestRequest(ReportUrls.GetAmountOfLeads, Method.Get);
+            RestRequest request = new RestRequest("api/Leads/take-leads-in-range", Method.Get);
 
-            request.AddUrlSegment("start", start);
-            request.AddUrlSegment("amount", amount);
-            var sres = await client.ExecuteAsync<List<LeadModel>>(request);
-
-            _logger.DoAction($"Try to get Id from rows {start} amount {amount}");//fix it
+            request.AddParameter("offset", start);
+            request.AddParameter("fetch", amount);
+            var sres = await GetResponseAsync<List<LeadModel>>(request, cancellationTokenSource);
 
             var list = sres.Data;
 
 
-            return /*метод на обработку лида*/list;
-            //return BirthdayCheck(a);
+            return list;
+
         }
 
         public async Task<int> GetCountRANDOmLeadTransactionsWithoutWithdraw(int leadId)
@@ -52,29 +51,48 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             Console.WriteLine("Получение РАНДОМНОГО кол-ва транзакций лида " + leadId);
             Random random = new Random();
             var countTransactions = await Task<int>.Run(() => random.Next(32, 52));
-            Console.WriteLine("РАНДОМНЫХ транзакций лида " + leadId +" составляет " + countTransactions);
+            Console.WriteLine("РАНДОМНЫХ транзакций лида " + leadId + " составляет " + countTransactions);
             return countTransactions;
         }
+        #endregion
 
-        public async Task<int> GetCountLeadTransactionsWithoutWithdrawal(int leadId, DateTime startDate)
+        public async Task<int> GetCountLeadTransactionsWithoutWithdrawal(int leadId, DateTime startDate, CancellationTokenSource cancellationTokenSource)
         {
-            Console.WriteLine("Скачивание КОЛ-ВА транзакций лида " + leadId);
+
             var request = new RestRequest("api/Transactions/count-transaction-without-withdrawal/", Method.Get)
                 .AddParameter("leadId", leadId)
                 .AddParameter("startDate", startDate.ToString("s"));
-            var result = await GetResponseAsync<int>(request);
-            Console.WriteLine("У лида " + leadId + " КОЛ-ВО транзакций " + result.Data);
-            return result.Data;
+
+            int result = 0;
+            if (!cancellationTokenSource.IsCancellationRequested)
+            {
+                Console.WriteLine("Скачивание КОЛ-ВА транзакций лида " + leadId);
+                var response = await GetResponseAsync<int>(request, cancellationTokenSource);
+                result = response.Data;
+                Console.WriteLine("У лида " + leadId + " КОЛ-ВО транзакций " + result);
+            }
+
+            return result;
         }
 
-        public async Task<List<TransactionResponseModel>?> GetLeadTransactionsDepositWithdrawForLastMonth(int leadId)
+        public async Task<List<TransactionResponseModel>?> GetLeadTransactionsDepositWithdrawForLastMonth(int leadId, CancellationTokenSource cancellationTokenSource)
         {
-            Console.WriteLine("СКАЧИВАНИЕ транзакций лида с айди " + leadId);
+
             var request = new RestRequest("api/Transactions/by-leadId-last-month/", Method.Get)
                 .AddParameter("leadId", leadId);
-            var result = await GetResponseAsync<List<TransactionResponseModel>>(request);
-            Console.WriteLine("Транзакции СКАЧАНЫ у лида с айди " + leadId + " их " + result.Data.Count());
-            return result.Data;
+
+            List<TransactionResponseModel>? result;
+            if (!cancellationTokenSource.IsCancellationRequested)
+            {
+                Console.WriteLine("СКАЧИВАНИЕ транзакций лида с айди " + leadId);
+                var response = await GetResponseAsync<List<TransactionResponseModel>>(request, cancellationTokenSource);
+                result = response.Data;
+                Console.WriteLine("Транзакции СКАЧАНЫ у лида с айди " + leadId + " их " + result?.Count);
+            }
+            else
+                result = new();
+
+            return result;
         }
 
     }
