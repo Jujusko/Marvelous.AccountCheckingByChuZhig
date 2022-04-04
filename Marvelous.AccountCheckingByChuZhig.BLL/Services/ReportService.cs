@@ -1,6 +1,7 @@
 ﻿using Marvelous.AccountCheckingByChuZhig.BLL.Helpers;
 using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 using Marvelous.Contracts;
+using Marvelous.Contracts.Enums;
 using Newtonsoft.Json;
 using RestSharp;
 using System.Net;
@@ -91,6 +92,16 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             }
             else
                 result = new();
+
+            return result;
+        }
+
+        public async Task<int> GetCountOfLeadsByRole(Role role, CancellationTokenSource cancellationTokenSource)
+        {
+            var request = new RestRequest("api/Leads/count-leads/", Method.Get)
+                .AddParameter("role", role.ToString());
+            var response = await GetResponseAsync<int>(request, cancellationTokenSource);
+            var result = response.Data;
 
             return result;
         }

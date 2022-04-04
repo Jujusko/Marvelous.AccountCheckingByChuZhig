@@ -5,6 +5,10 @@ using Marvelous.AccountCheckingByChuZhig.BLL.Services;
 using Marvelous.AccountCheckingByChuZhig.HostProject.Producers;
 using NLog;
 using Marvelous.Contracts;
+using Marvelous.Contracts.ExchangeModels;
+using Marvelous.Contracts.Enums;
+using Marvelous.Producers;
+
 namespace Marvelous.AccountCheckingByChuZhig.HostProject
 {
     public class Worker : BackgroundService
@@ -12,6 +16,7 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
         private readonly ILogHelper _log;
         private readonly ILeadProducer _leadProducer;
         private readonly IReportService _reportService;
+        private ListLeadsForUpdateRole _leadsForUpdateRole = new ListLeadsForUpdateRole() { Leads = new() };
 
         public Worker(ILogHelper helper, ILeadProducer leadProducer, IReportService reportService)
         {
@@ -22,6 +27,12 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            //в будущем одна строка, а щас что имеем
+            var cts = new CancellationTokenSource();
+            var countOfLeadsVip = await _reportService.GetCountOfLeadsByRole(Role.Vip, cts);
+            var countOfLeadsRegular = await _reportService.GetCountOfLeadsByRole(Role.Regular, cts);
+            var countOfLeads = countOfLeadsVip + countOfLeadsRegular;
+
             #region DD
             //int i = 0; 
             //AccountChecking instance = new(_log);
@@ -36,17 +47,24 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             //while (!stoppingToken.IsCancellationRequested)
             //{
             #endregion
-            /*
-             получать в потоках первого уровня пачками лидов
-             для каждого потока создавать лист лидов, у которых что-то может поменяться
-             прогонять их через StartCheckAsync в потоках второго уровня
-             в потоках третьего уровня смотреть правила, и если там где-то выпал TRUE, то ставить Vip, если не стоит
-             после потоков третьего уровня...
-             */
-            List<LeadModel> leadsVip = new();
-            CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-            List<LeadModel>? leadsForCheck = await _reportService.NewGetAllLeads(0, 5, cancelTokenSource);
-            ParallelLoopResult result = Parallel.ForEach(leadsForCheck, lead => StartCheckAsync(lead));
+            //while (!stoppingToken.IsCancellationRequested) //прилажка крутится
+            //{
+            int i = 0;
+            int sizePack = 50;
+            for (; i <= countOfLeads; i += sizePack)
+            {
+                CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+                List<LeadModel>? leadsForCheck = await _reportService.NewGetAllLeads(i, sizePack, cancelTokenSource);
+
+                await Parallel.ForEachAsync(leadsForCheck, async (lead, token) =>
+                    {
+                        await StartCheckAsync(lead);
+                    });
+                sizePack += sizePack;
+            }
+
+            //}
+
             #region DD2
             //i++;
             //Console.WriteLine(DateTime.Now);
@@ -89,8 +107,6 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
 
         public async Task StartCheckAsync(LeadModel lead)
         {
-            //int? numTask = Task.CurrentId;
-            //Console.WriteLine("Поток номер - " + numTask + " запущен. Лид " + lead.Id);
             CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
 
             CheckerRules checkerRules = new(cancelTokenSource, lead);
@@ -99,19 +115,10 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
                 Task t3 = Task.Run(async () => checkerRules.CheckDifferenceWithdrawDeposit(await _reportService.GetLeadTransactionsDepositWithdrawForLastMonth(lead.Id, cancelTokenSource)), cancelTokenSource.Token);
                 Task t1 = Task.Run(() => checkerRules.CheckLeadBirthday(lead), cancelTokenSource.Token);
                 Task t2 = Task.Run(async () => checkerRules.CheckCountLeadTransactions(await _reportService.GetCountLeadTransactionsWithoutWithdrawal(lead.Id, DateTime.Now.AddMonths(-2), cancelTokenSource)), cancelTokenSource.Token);
-                
-
                 Task[] tasks = { t1, t2, t3 };
 
-                //Parallel.Invoke(new ParallelOptions { CancellationToken = cancelTokenSource.Token },
-                //                () => checkerRules.CheckLeadBirthday(lead),
-                //                async () => checkerRules.CheckCountLeadTransactions(await _reportService.GetCountLeadTransactionsWithoutWithdrawal(lead.Id, DateTime.Now.AddMonths(-2), cancelTokenSource)),
-                //                async () => checkerRules.CheckDifferenceWithdrawDeposit(await _reportService.GetLeadTransactionsDepositWithdrawForLastMonth(lead.Id, cancelTokenSource)));
-                //Console.ForegroundColor = ConsoleColor.Green;
-                //Console.WriteLine("Поток номер - " + numTask + " отработал корректно");
-                //Console.ResetColor();
                 await Task.WhenAll(tasks);
-                Console.WriteLine("Результат проверки лида с ID = " + lead.Id + ": " + checkerRules.DeservesToBeVip);
+                await CreateListAndSend(lead, checkerRules.DeservesToBeVip);
 
             }
             catch (Exception ex)
@@ -119,11 +126,30 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("Перехвачена " + ex.Message + " остановка потока " + " на лиде " + lead.Id);
                 Console.ResetColor();
-                cancelTokenSource.Dispose();//освобождение потоков
             }
             finally
             {
-                //cancelTokenSource.Token.Register(() => Console.WriteLine("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa"));
+                cancelTokenSource.Token.Register(() => cancelTokenSource.Dispose());
+            }
+        }
+
+        //хочу чтобы этот метод крутился асинхронно и ловил лидов и в случае чего их отправлял
+        private async Task CreateListAndSend(LeadModel lead, bool isVip)
+        {
+            if (isVip && lead.Role != Role.Vip.ToString())
+            {
+                _leadsForUpdateRole.Leads.Add(new LeadShortExchangeModel { Email = lead.Email, Id = lead.Id, Role = Role.Vip });
+                _log.DoAction($"The lead with ID = {lead.Id} has been assigned VIP status");
+            }
+            else if (!isVip && lead.Role == Role.Vip.ToString())
+            {
+                _leadsForUpdateRole.Leads.Add(new LeadShortExchangeModel { Email = lead.Email, Id = lead.Id, Role = Role.Regular });
+                _log.DoAction($"VIP status has been removed from the user with ID = {lead.Id}");
+            }
+            if (_leadsForUpdateRole.Leads.Count == 30)
+            {
+                await _leadProducer.SendLeads(_leadsForUpdateRole);
+                _leadsForUpdateRole.Leads.Clear();
             }
         }
     }

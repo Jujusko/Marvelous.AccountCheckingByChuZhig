@@ -1,9 +1,11 @@
 ﻿using Marvelous.Contracts.Enums;
+using Marvelous.Contracts.ExchangeModels;
+using Marvelous.Producers;
 
 namespace Marvelous.AccountCheckingByChuZhig.HostProject.Producers
 {
     public interface ILeadProducer
     {
-        Task SendMessage(int leadId, Role role);
+        Task SendLeads(ListLeadsForUpdateRole leads);
     }
 }

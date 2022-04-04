@@ -1,22 +1,28 @@
-﻿{
+{
   "profiles": {
     "Marvelous.AccountCheckingByChuZhig.HostProject": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development",
         "LOG_DIRECTORY": "C:/Users/ДД/Desktop/"
-
       },
-      "Chugun228": {
-        "commandName": "Project",
-        "dotnetRunMessages": true,
-        "environmentVariables": {
-          "DOTNET_ENVIRONMENT": "Development",
-          "LOG_DIRECTORY": "C:/Users/Anton/source/repos/Marvelous.AccountCheckingByChuZhigTest/Marvelous.AccountCheckingByChuZhig.HostProject/"
-
-        }
-      }
+      "dotnetRunMessages": true
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "LOG_DIRECTORY": "C:/Users/ДД/Desktop/"
+      },
+      "distributionName": ""
+    },
+    "Antoshka": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "LOG_DIRECTORY": "C:/Users/Anton/source/repos/Marvelous.AccountCheckingByChuZhig/Marvelous.AccountCheckingByChuZhig.HostProject"
+      },
+      "distributionName": ""
     }
   }
 }

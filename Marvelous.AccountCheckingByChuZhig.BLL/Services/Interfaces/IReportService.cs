@@ -1,4 +1,5 @@
 ﻿using Marvelous.AccountCheckingByChuZhig.BLL.Models;
+using Marvelous.Contracts.Enums;
 
 namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
@@ -9,5 +10,6 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
         Task<int> GetCountRANDOmLeadTransactionsWithoutWithdraw(int leadId);
         Task<int> GetCountLeadTransactionsWithoutWithdrawal(int leadId, DateTime startDate, CancellationTokenSource cancellationTokenSource);
         Task<List<TransactionResponseModel>?> GetLeadTransactionsDepositWithdrawForLastMonth(int leadId, CancellationTokenSource cancellationTokenSource);
+        Task<int> GetCountOfLeadsByRole(Role role, CancellationTokenSource cancellationTokenSource);
     }
 }
