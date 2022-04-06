@@ -20,7 +20,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL
 
         public void DoAction(string name)
         {
-            _logger.LogInformation(20, "{Action}", name);
+            _logger.LogInformation(name);
         }
     }
 }

@@ -4,8 +4,8 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
     public interface ICheckerRules
     {
-        bool CheckDifferenceWithdrawDeposit(List<TransactionResponseModel> leadTransactionsLastMonth);
-        bool CheckLeadBirthday(LeadModel leadModel);
-        bool CheckCountLeadTransactions(int countTransactionsWithoutWithdraw);
+        void CheckCountLeadTransactions(LeadForUpdateRole _lead, int countTransactionsWithoutWithdraw, CancellationTokenSource cancellationTokenSource);
+        void CheckDifferenceWithdrawDeposit(LeadForUpdateRole _lead, List<TransactionResponseModel>? leadTransactionsLastMonthWithdrawDeposit, CancellationTokenSource cancellationTokenSource);
+        void CheckLeadBirthday(LeadForUpdateRole _lead, CancellationTokenSource cancellationTokenSource);
     }
 }

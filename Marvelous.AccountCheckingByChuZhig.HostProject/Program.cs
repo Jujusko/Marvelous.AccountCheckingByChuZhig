@@ -6,6 +6,8 @@ using NLog.Extensions.Logging;
 using Marvelous.AccountCheckingByChuZhig.HostProject.Producers;
 using Marvelous.AccountCheckingByChuZhig.BLL.Services;
 using MassTransit;
+using AutoMapper;
+using Marvelous.AccountCheckingByChuZhig.HostProject.Configurations;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
@@ -48,8 +50,17 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddHostedService<Worker>();
         services.AddSingleton<ILeadProducer, LeadProducer>();
+        // Auto Mapper Configurations
+        var mapperConfig = new MapperConfiguration(mc =>
+        {
+            mc.AddProfile(new CustomMapper());
+        });
+
+        IMapper mapper = mapperConfig.CreateMapper();
+        services.AddSingleton(mapper);
         services.AddSingleton<ILogHelper, LogHelper>();
         services.AddSingleton<IReportService, ReportService>();
+        services.AddSingleton<ICheckerRules, CheckerRules>();
         services.Configure<ConsoleLifetimeOptions>(opts => opts.SuppressStatusMessages = true);
         services.AddLogging(loggingBuilder =>
         {

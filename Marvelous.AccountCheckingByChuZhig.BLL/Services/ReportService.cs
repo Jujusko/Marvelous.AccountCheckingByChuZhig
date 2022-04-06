@@ -1,4 +1,5 @@
-﻿using Marvelous.AccountCheckingByChuZhig.BLL.Helpers;
+﻿using AutoMapper;
+using Marvelous.AccountCheckingByChuZhig.BLL.Helpers;
 using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 using Marvelous.Contracts;
 using Marvelous.Contracts.Enums;
@@ -12,10 +13,12 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
     public class ReportService : BaseService, IReportService
     {
         private readonly ILogHelper _logger;
-        public ReportService(ILogHelper logger)
+        private readonly IMapper _mapper;
+        public ReportService(ILogHelper logger, IMapper mapper)
         {
             _domain = ReportUrls.ReportDomain;
             _logger = logger;
+            _mapper = mapper;
         }
 
         #region AUF выкатываем со дворов
@@ -32,7 +35,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
         }
 
 
-        public async Task<List<LeadModel>?> NewGetAllLeads(int start, int amount, CancellationTokenSource cancellationTokenSource)
+        public async Task<List<LeadForUpdateRole>?> NewGetAllLeads(int start, int amount, CancellationTokenSource cancellationTokenSource)
         {
             RestRequest request = new RestRequest("api/Leads/take-leads-in-range", Method.Get);
 
@@ -43,7 +46,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             var list = sres.Data;
 
 
-            return list;
+            return _mapper.Map<List<LeadForUpdateRole>>(list);
 
         }
 
