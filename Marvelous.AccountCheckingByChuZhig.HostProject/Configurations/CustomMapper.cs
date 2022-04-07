@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Marvelous.AccountCheckingByChuZhig.BLL.Models;
+using Marvelous.Contracts.ExchangeModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject.Configurations
         public CustomMapper()
         {
             CreateMap<LeadModel, LeadForUpdateRole>();
+            CreateMap<LeadForUpdateRole, LeadShortExchangeModel>();
         }
     }
 }

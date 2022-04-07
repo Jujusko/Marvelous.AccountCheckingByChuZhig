@@ -10,52 +10,53 @@ using Marvelous.Contracts.Enums;
 
 namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
-    public class CheckerRules : ICheckerRules
+    public class CheckerRules
     {
-        //private CancellationTokenSource _cancellationTokenSource;
-        //private LeadForUpdateRole _lead;
-        //public bool DeservesToBeVip { get; private set; }
+        private CancellationTokenSource _cancellationTokenSource;
+        private readonly IReportService _reportService;
         private const int _daysAfterBirthday = 14;
         private const int _requiredTransactionsNumberInTwoLastMonths = 42;
         private const decimal _requiredDifferenceWthdrawDeposit = 13000m;
-        public CheckerRules(/*CancellationTokenSource cancellationTokenSource, LeadForUpdateRole lead*/)
+        private DateTime _defaultStartDate = DateTime.Now.AddMonths(-2);
+        public CheckerRules(IReportService reportService, CancellationTokenSource cancellationTokenSource)
         {
-            //_cancellationTokenSource = cancellationTokenSource;
-            //_lead = lead;
-            //_lead.DeservesToBeVip = false;
+            _cancellationTokenSource = cancellationTokenSource;
+            _reportService = reportService;
         }
 
-        public void CheckLeadBirthday(LeadForUpdateRole _lead, CancellationTokenSource cancellationTokenSource)
+        public void CheckLeadBirthday(LeadForUpdateRole _lead)
         {
-            int yearDifference = DateTime.Now.Year - _lead.BirthDate.Year;
+            int yearDifference = 2022 - _lead.BirthDate.Year;
             DateTime date = _lead.BirthDate.AddYears(yearDifference);
             var daysAfterBirthday = DateTime.Now.Subtract(date).Days;
             var result = daysAfterBirthday >= 0 && daysAfterBirthday <= _daysAfterBirthday;
 
-            CancelToken(_lead, result, "ДНЮХА у лида " + _lead.Id, cancellationTokenSource);
+            CancelToken(_lead, result, "ДНЮХА у лида " + _lead.Id);
         }
-        public void CheckCountLeadTransactions(LeadForUpdateRole _lead, int countTransactionsWithoutWithdraw, CancellationTokenSource cancellationTokenSource)
+        public async Task CheckCountLeadTransactionsAsync(LeadForUpdateRole _lead)
         {
+            var countTransactionsWithoutWithdraw = await _reportService.GetCountLeadTransactionsWithoutWithdrawal(_lead.Id, _defaultStartDate, _cancellationTokenSource);
             var result = countTransactionsWithoutWithdraw >= _requiredTransactionsNumberInTwoLastMonths;
-            CancelToken(_lead, result, "КОЛИЧЕСТВО транзакций у лида " + _lead.Id, cancellationTokenSource);
+            CancelToken(_lead, result, "КОЛИЧЕСТВО транзакций у лида " + _lead.Id);
 
         }
 
-        public void CheckDifferenceWithdrawDeposit(LeadForUpdateRole _lead, List<TransactionResponseModel>? leadTransactionsLastMonthWithdrawDeposit, CancellationTokenSource cancellationTokenSource)
+        public async Task CheckDifferenceWithdrawDeposit(LeadForUpdateRole _lead)
         {
+            var leadTransactionsLastMonthWithdrawDeposit = await _reportService.GetLeadTransactionsDepositWithdrawForLastMonth(_lead.Id, _cancellationTokenSource);
 
             if (leadTransactionsLastMonthWithdrawDeposit is null || leadTransactionsLastMonthWithdrawDeposit.Count == 0)
             {
-                Console.WriteLine("У лида " + _lead.Id + " ноль транзакций");
+                //Console.WriteLine("У лида " + _lead.Id + " ноль транзакций");
                 return;
             }
-            Console.WriteLine("У лида " + _lead.Id + " транзакций для ПЕРЕСЧЁТА " + leadTransactionsLastMonthWithdrawDeposit.Count());
+            //Console.WriteLine("У лида " + _lead.Id + " транзакций для ПЕРЕСЧЁТА " + leadTransactionsLastMonthWithdrawDeposit.Count());
             decimal difference = 0;
             foreach (TransactionResponseModel trans in leadTransactionsLastMonthWithdrawDeposit)
             {
-                if (cancellationTokenSource.IsCancellationRequested)
+                if (_cancellationTokenSource.IsCancellationRequested)
                 {
-                    Console.WriteLine("Пересчёт транзакций лида " + _lead.Id + "  остановлен");
+                    //Console.WriteLine("Пересчёт транзакций лида " + _lead.Id + "  остановлен");
                     break;
                 }
 
@@ -63,18 +64,18 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             }
             var result = difference > _requiredDifferenceWthdrawDeposit || difference < -_requiredDifferenceWthdrawDeposit;
 
-            CancelToken(_lead, result, "ДОСТАТОЧНАЯ суММА " + difference + " у лида " + _lead.Id, cancellationTokenSource);
+            CancelToken(_lead, result, "ДОСТАТОЧНАЯ суММА " + difference + " у лида " + _lead.Id);
         }
 
-        private void CancelToken(LeadForUpdateRole _lead, bool result, string message, CancellationTokenSource cancellationTokenSource)
+        private void CancelToken(LeadForUpdateRole _lead, bool result, string message)
         {
-            if (result && !cancellationTokenSource.IsCancellationRequested)
+            if (result && !_cancellationTokenSource.IsCancellationRequested)
             {
                 _lead.DeservesToBeVip = true;
-                cancellationTokenSource.Cancel();
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Поток остановлен " + message);
-                Console.ResetColor();
+                _cancellationTokenSource.Cancel();
+                //Console.ForegroundColor = ConsoleColor.Yellow;
+                //Console.WriteLine("Поток остановлен " + message);
+                //Console.ResetColor();
             }
         }
     }

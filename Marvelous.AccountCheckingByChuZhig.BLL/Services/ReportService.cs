@@ -70,10 +70,8 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             int result = 0;
             if (!cancellationTokenSource.IsCancellationRequested)
             {
-                Console.WriteLine("Скачивание КОЛ-ВА транзакций лида " + leadId);
                 var response = await GetResponseAsync<int>(request, cancellationTokenSource);
                 result = response.Data;
-                Console.WriteLine("У лида " + leadId + " КОЛ-ВО транзакций " + result);
             }
 
             return result;
@@ -88,10 +86,8 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             List<TransactionResponseModel>? result;
             if (!cancellationTokenSource.IsCancellationRequested)
             {
-                Console.WriteLine("СКАЧИВАНИЕ транзакций лида с айди " + leadId);
                 var response = await GetResponseAsync<List<TransactionResponseModel>>(request, cancellationTokenSource);
                 result = response.Data;
-                Console.WriteLine("Транзакции СКАЧАНЫ у лида с айди " + leadId + " их " + result?.Count);
             }
             else
                 result = new();

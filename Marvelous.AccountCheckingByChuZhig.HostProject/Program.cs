@@ -60,7 +60,6 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton(mapper);
         services.AddSingleton<ILogHelper, LogHelper>();
         services.AddSingleton<IReportService, ReportService>();
-        services.AddSingleton<ICheckerRules, CheckerRules>();
         services.Configure<ConsoleLifetimeOptions>(opts => opts.SuppressStatusMessages = true);
         services.AddLogging(loggingBuilder =>
         {

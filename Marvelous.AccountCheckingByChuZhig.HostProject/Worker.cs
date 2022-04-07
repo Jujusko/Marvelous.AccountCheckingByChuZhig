@@ -16,25 +16,23 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
         private readonly ILogHelper _log;
         private readonly ILeadProducer _leadProducer;
         private readonly IReportService _reportService;
-        private readonly ICheckerRules _checkerRules;
         private List<LeadForUpdateRole> _leadForUpdateRoles;
 
-        public Worker(ILogHelper helper, ILeadProducer leadProducer, IReportService reportService, ICheckerRules checkerRules)
+        public Worker(ILogHelper helper, ILeadProducer leadProducer, IReportService reportService)
         {
             _log = helper;
             _leadProducer = leadProducer;
             _reportService = reportService;
-            _checkerRules = checkerRules;
             _leadForUpdateRoles = new();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             //в будущем одна строка, а щас что имеем
-            var cts = new CancellationTokenSource();
-            var countOfLeadsVip = await _reportService.GetCountOfLeadsByRole(Role.Vip, cts);
-            var countOfLeadsRegular = await _reportService.GetCountOfLeadsByRole(Role.Regular, cts);
-            var countOfLeads = countOfLeadsVip + countOfLeadsRegular;
+            //var cts = new CancellationTokenSource();
+            //var countOfLeadsVip = await _reportService.GetCountOfLeadsByRole(Role.Vip, cts);
+            //var countOfLeadsRegular = await _reportService.GetCountOfLeadsByRole(Role.Regular, cts);
+            //var countOfLeads = countOfLeadsVip + countOfLeadsRegular;
 
             #region DD
             //int i = 0; 
@@ -50,21 +48,37 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             //while (!stoppingToken.IsCancellationRequested)
             //{
             #endregion
-            //while (!stoppingToken.IsCancellationRequested) //прилажка крутится
-            //{
-            int i = 0;
-            int sizePack = 10;
-            for (; i <= countOfLeads; i += sizePack)
+            while (!stoppingToken.IsCancellationRequested)
             {
-                CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-                List<LeadForUpdateRole>? leadsForCheck = await _reportService.NewGetAllLeads(i, i + sizePack, cancelTokenSource);
+                int i = 0;
+                int sizePack = 5;
+                _log.DoAction("LEAD VERIFICATION STARTED");
 
-                await Parallel.ForEachAsync(leadsForCheck, async (lead, token) =>
+                while (true)
+                {
+                    CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+                    List<LeadForUpdateRole>? leadsForCheck = await _reportService.NewGetAllLeads(i, sizePack, cancelTokenSource);
+
+                    if (leadsForCheck is null || leadsForCheck.Count == 0)
                     {
-                        StartCheck(lead);
+                        _log.DoAction("LEAD VERIFICATION COMPLETED");
+                        break;
+                    }
+                    Task task = Parallel.ForEachAsync(leadsForCheck, async (lead, token) =>
+                    {
+                        await StartCheckAsync(lead);
                     });
+                    await task;
+                    if (task.IsCompleted)
+                    {
+                        //foreach (var lead in leadsForCheck)
+                        //{
+                        //    CheckerRole(lead);
+                        //}
+                        i += sizePack;
+                    }
+                }
             }
-            //}
 
             #region DD2
             //i++;
@@ -106,49 +120,75 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             #endregion
         }
 
-        public void StartCheck(LeadForUpdateRole lead)
+        public async Task StartCheckAsync(LeadForUpdateRole lead)
         {
             CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+            CheckerRules checkerRules = new CheckerRules(_reportService, cancelTokenSource);
             try
             {
-                //Task t3 = Task.Run(async () => _checkerRules
-                //.CheckDifferenceWithdrawDeposit(lead, await _reportService
-                //.GetLeadTransactionsDepositWithdrawForLastMonth(lead.Id, cancelTokenSource), cancelTokenSource), cancelTokenSource.Token);
-                //Task t1 = Task.Run(() => _checkerRules.CheckLeadBirthday(lead, cancelTokenSource), cancelTokenSource.Token);
-                //Task t2 = Task.Run(async () => _checkerRules.CheckCountLeadTransactions(lead, await _reportService.GetCountLeadTransactionsWithoutWithdrawal(lead.Id, DateTime.Now.AddMonths(-2), cancelTokenSource), cancelTokenSource), cancelTokenSource.Token);
-                //Task[] tasks = { t1, t2, t3 };
+                //Parallel.Invoke(
+                //    new ParallelOptions { CancellationToken = cancelTokenSource.Token },
+                //    async () => await checkerRules.CheckCountLeadTransactionsAsync(lead),
+                //    async () => await checkerRules.CheckDifferenceWithdrawDeposit(lead),
+                //    () => checkerRules.CheckLeadBirthday(lead)
+                //    );
 
-                //await Task.WhenAll(tasks);
-                Parallel.Invoke(new ParallelOptions { CancellationToken = cancelTokenSource.Token },
-                    ()=> _checkerRules.CheckLeadBirthday(lead, cancelTokenSource),
-                    async ()=> _checkerRules.CheckCountLeadTransactions(lead, await _reportService.GetCountLeadTransactionsWithoutWithdrawal(lead.Id, DateTime.Now.AddMonths(-2), cancelTokenSource), cancelTokenSource),
-                    async ()=> _checkerRules
-                    .CheckDifferenceWithdrawDeposit(lead, await _reportService
-                    .GetLeadTransactionsDepositWithdrawForLastMonth(lead.Id, cancelTokenSource), cancelTokenSource)
-                    );
+                Task taskCheckBirthday = Task.Run(() => checkerRules.CheckLeadBirthday(lead), cancelTokenSource.Token);
+                Task taskCheckCountTransactions = Task.Run(() => checkerRules.CheckCountLeadTransactionsAsync(lead), cancelTokenSource.Token);
+                Task taskCheckDifferenceTransactions = Task.Run(() => checkerRules.CheckDifferenceWithdrawDeposit(lead), cancelTokenSource.Token);
+                Task[] tasks = { taskCheckBirthday, taskCheckCountTransactions, taskCheckDifferenceTransactions };
+                await Task.WhenAll(tasks);
+                await CheckerRole(lead);
             }
+           
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Перехвачена " + ex.Message + " остановка потока " + " на лиде " + lead.Id);
-                Console.ResetColor();
+                lead.DeservesToBeVip = true;
             }
             finally
             {
-                //cancelTokenSource.Token.Register(() => cancelTokenSource.Dispose());
-            }
+                
+             }
         }
 
-        //хочу чтобы этот метод крутился асинхронно и ловил лидов и в случае чего их отправлял
-        private async Task CreateListAndSend(LeadForUpdateRole lead)
+        //private void CheckerRole(LeadForUpdateRole lead)
+        //{
+        //    if (lead.DeservesToBeVip && lead.Role == Role.Regular)
+        //        _log.DoAction($"Lead with Id = {lead.Id} got VIP status");
+        //    else if (!lead.DeservesToBeVip && lead.Role == Role.Vip) 
+        //        _log.DoAction($"Lead with Id = {lead.Id} lost VIP status");
+        //}
+        private async Task CheckerRole(LeadForUpdateRole lead)
         {
-            while (true)
-            {
-                if (lead is not null)
+                if (lead.DeservesToBeVip && lead.Role == Role.Regular)
                 {
-                    _leadForUpdateRoles.Add(lead);
+                    _log.DoAction($"Lead with Id = {lead.Id} got VIP status");
+                    await _leadProducer.SendLeads(lead);
                 }
-            }
+                else if (!lead.DeservesToBeVip && lead.Role == Role.Vip)
+                {
+                    _log.DoAction($"Lead with Id = {lead.Id} lost VIP status");
+                    await _leadProducer.SendLeads(lead);
+                }
         }
+
+        //private async Task SendLeads()
+        //{
+        //    while (true)
+        //    {
+        //        if (_leadForUpdateRoles.Count == 200)
+        //        {
+        //            foreach (var lead in _leadForUpdateRoles)
+        //            {
+        //                if (!CheckerRole(lead))
+        //                {
+        //                    _leadForUpdateRoles.Remove(lead);
+        //                }
+        //            }
+        //            await _leadProducer.SendLeads(_leadForUpdateRoles);
+        //            _leadForUpdateRoles.Clear();
+        //        }
+        //    }
+        //}
     }
 }
