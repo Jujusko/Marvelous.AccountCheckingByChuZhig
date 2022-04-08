@@ -18,7 +18,7 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             _domain = ReportUrls.ReportDomain;
             _mapper = mapper;
         }
-
+       // GetLeadTransactionsDepositWithdrawForLastMonth
         public async Task<List<LeadForUpdateRole>?> GetLeadsInRange(int start, int amount)
         {
             RestRequest request = new RestRequest("api/Leads/take-leads-in-range", Method.Get);
@@ -56,7 +56,6 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             List<ShortTransactionResponse>? result;
             var response = await GetResponseAsync<List<ShortTransactionResponse>>(request);
             result = response.Data;
-
 
             return result;
         }

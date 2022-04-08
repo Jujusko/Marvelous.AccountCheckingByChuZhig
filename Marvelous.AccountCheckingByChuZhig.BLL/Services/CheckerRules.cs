@@ -22,18 +22,18 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             bool result = date.IsInRange(DateTime.Now.AddDays(_daysAfterBirthday),DateTime.Now);
             return result;
         }
-        public async Task<bool> CheckCountLeadTransactionsAsync(LeadForUpdateRole _lead)
+        public bool CheckCountLeadTransactionsAsync(LeadForUpdateRole _lead)
         {
-            var countTransactionsWithoutWithdraw = await 
-                _reportService.GetCountLeadTransactionsWithoutWithdrawal(_lead.Id);
+            var countTransactionsWithoutWithdraw = 
+                _reportService.GetCountLeadTransactionsWithoutWithdrawal(_lead.Id).Result;
             var result = countTransactionsWithoutWithdraw >= _requiredTransactionsNumberInTwoLastMonths;
             return result;
         }
 
-        public async Task<bool> CheckDifferenceWithdrawDeposit(LeadForUpdateRole _lead)
+        public bool CheckDifferenceWithdrawDeposit(LeadForUpdateRole _lead)
         {
-            var leadTransactionsLastMonthWithdrawDeposit = await 
-                _reportService.GetLeadTransactionsDepositWithdrawForLastMonth(_lead.Id);
+            var leadTransactionsLastMonthWithdrawDeposit = 
+                _reportService.GetLeadTransactionsDepositWithdrawForLastMonth(_lead.Id).Result;
             if (leadTransactionsLastMonthWithdrawDeposit is null || leadTransactionsLastMonthWithdrawDeposit.Count == 0)
             {
                 return false;

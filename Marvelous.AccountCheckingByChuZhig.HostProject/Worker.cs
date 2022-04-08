@@ -49,7 +49,7 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
                 while (true)
                 {
                     CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-                    List<LeadForUpdateRole>? leadsForCheck = await _reportService.GetLeadsInRange(i, sizePack);
+                    List<LeadForUpdateRole>? leadsForCheck = _reportService.GetLeadsInRange(i, sizePack).Result;
 
                     if (leadsForCheck is null || leadsForCheck.Count == 0)
                     {
@@ -58,7 +58,7 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
                     }
                     Task task = Parallel.ForEachAsync(leadsForCheck, async (lead, token) =>
                     {
-                        await StartCheckAsync(lead);
+                        await Task.Run(() => StartCheckAsync(lead));
                     });
                     await task;
                     if (task.IsCompleted)
@@ -113,24 +113,40 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             CheckerRules checkerRules = new CheckerRules(_reportService);
             //try
             //{
-            Task<bool> taskCheckBirthday = Task.Run(() => checkerRules.CheckLeadBirthday(lead));
-            Task<bool> taskCheckCountTransactions = Task.Run(() => checkerRules.CheckCountLeadTransactionsAsync(lead));
-            Task<bool> taskCheckDifferenceTransactions = Task.Run(() => checkerRules.CheckDifferenceWithdrawDeposit(lead));
-
-            List<Task<bool>> tasks = new List<Task<bool>> { taskCheckBirthday, taskCheckCountTransactions, taskCheckDifferenceTransactions };
-
-            while (tasks.Count > 0)
+            bool taskCheckBirthday = checkerRules.CheckLeadBirthday(lead);
+            if (taskCheckBirthday)
             {
-                Task<bool> completed = await Task.WhenAny(tasks);
-                if (completed.Status == TaskStatus.RanToCompletion &&
-                    completed.Result)
-                {
-                    lead.DeservesToBeVip = true;
-                    break;
-                }
-                tasks.Remove(completed);
+                _leadProducer.ProcessedLeads.Add(lead);
+                return;
             }
-            _leadProducer.ProcessedLeads.Add(lead);
+
+            bool taskCheckCountTransactions = checkerRules.CheckCountLeadTransactionsAsync(lead);
+            if (taskCheckCountTransactions)
+            {
+                _leadProducer.ProcessedLeads.Add(lead);
+                return;
+            }
+            bool taskCheckDifferenceTransactions = checkerRules.CheckDifferenceWithdrawDeposit(lead);
+            if (taskCheckDifferenceTransactions)
+            {
+                _leadProducer.ProcessedLeads.Add(lead);
+                return;
+            }
+            //List<Task<bool>> tasks = new List<Task<bool>> { taskCheckBirthday, taskCheckCountTransactions, taskCheckDifferenceTransactions };
+
+            //while (tasks.Count > 0)
+            //{
+            //    Task<bool> completed = await Task.WhenAny(tasks);
+            //    if (completed.Status == TaskStatus.RanToCompletion &&
+            //        completed.Result)
+            //    {
+            //        lead.DeservesToBeVip = true;
+            //        break;
+            //    }
+            //    tasks.Remove(completed);
+            //}
+            //if (taskCheckBirthday || taskCheckCountTransactions || taskCheckDifferenceTransactions)
+            //    _leadProducer.ProcessedLeads.Add(lead);
             //}
 
             //catch (Exception ex)

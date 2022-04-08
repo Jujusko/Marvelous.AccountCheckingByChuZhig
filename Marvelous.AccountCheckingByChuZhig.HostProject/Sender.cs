@@ -25,26 +25,33 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            List<LeadShortExchangeModel> vipLeads = new();
+            List<LeadShortExchangeModel> regularLeads = new();
             while (!stoppingToken.IsCancellationRequested)
             {
                 LeadForUpdateRole? lead;
                 if (_leadProducer.ProcessedLeads.TryTake(out lead))
+                {
                     CheckerRole(lead);
+                }
             }
         }
-
+        //SendLeads(List<LeadShortExchangeModel> leads)
         private void CheckerRole(LeadForUpdateRole lead)
         {
             if (lead.DeservesToBeVip && lead.Role == Role.Regular)
             {
+                lead.Role = Role.Vip;
                 _log.DoAction($"Lead with Id = {lead.Id} got VIP status");
                 _leadProducer.LeadsGotVip.Add(lead);
             }
             else if (!lead.DeservesToBeVip && lead.Role == Role.Vip)
             {
+                lead.Role = Role.Regular;
                 _log.DoAction($"Lead with Id = {lead.Id} got REGULAR status");
                 _leadProducer.LeadsLostVip.Add(lead);
             }
+
         }
     }
 }
