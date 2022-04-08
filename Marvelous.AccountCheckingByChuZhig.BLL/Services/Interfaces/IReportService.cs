@@ -5,9 +5,8 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
     public interface IReportService
     {
-        Task<int> GetCountLeadTransactionsWithoutWithdrawal(int leadId);
-        Task<int> GetCountOfLeadsByRole(Role role);
+        Task<int?> GetCountLeadTransactionsWithoutWithdrawal(int leadId);
         Task<List<ShortTransactionResponse>?> GetLeadTransactionsDepositWithdrawForLastMonth(int leadId);
-        Task<List<LeadForUpdateRole>?> GetLeadsInRange(int start, int amount);
+        Task<List<LeadForUpdateRole>?> GetLeadsInRange(int startRange, int amount);
     }
 }

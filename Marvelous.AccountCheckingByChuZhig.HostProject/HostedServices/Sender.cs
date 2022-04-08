@@ -7,7 +7,6 @@ using NLog;
 using Marvelous.Contracts;
 using Marvelous.Contracts.ExchangeModels;
 using Marvelous.Contracts.Enums;
-using Marvelous.Producers;
 using System.Collections.Concurrent;
 
 namespace Marvelous.AccountCheckingByChuZhig.HostProject
@@ -16,14 +15,13 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
     {
         private readonly ILogHelper _log;
         private readonly ILeadProducer _leadProducer;
-        private List<LeadShortExchangeModel> LeadsGotVip { get; set; }
-        private List<LeadShortExchangeModel> LeadsLostVip { get; set; }
+        private const int _sizePack = 100;
+        private List<LeadShortExchangeModel> LeadsForUpdate { get; set; }
         public Sender(ILeadProducer leadProducer, ILogHelper log)
         {
             _leadProducer = leadProducer;
             _log = log;
-            LeadsGotVip = new();
-            LeadsLostVip = new();
+            LeadsForUpdate = new();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -42,17 +40,17 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             {
                 lead.Role = Role.Vip;
                 _log.DoAction($"Lead with Id = {lead.Id} got VIP status");
-                LeadsGotVip.Add(lead);
+                LeadsForUpdate.Add(lead);
             }
             else if (!lead.DeservesToBeVip && lead.Role == Role.Vip)
             {
                 lead.Role = Role.Regular;
                 _log.DoAction($"Lead with Id = {lead.Id} got REGULAR status");
-                LeadsGotVip.Add(lead);
+                LeadsForUpdate.Add(lead);
             }
-            if (LeadsGotVip.Count == 100)
+            if (LeadsForUpdate.Count == _sizePack)
             {
-                await _leadProducer.SendLeads(LeadsGotVip);
+                await _leadProducer.SendLeads(LeadsForUpdate);
             }
         }
     }
