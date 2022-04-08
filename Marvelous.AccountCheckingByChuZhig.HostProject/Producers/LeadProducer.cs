@@ -5,6 +5,7 @@ using MassTransit;
 using Marvelous.Producers;
 using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 using AutoMapper;
+using System.Collections.Concurrent;
 
 namespace Marvelous.AccountCheckingByChuZhig.HostProject.Producers
 {
@@ -13,27 +14,29 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject.Producers
         private readonly ILogger<LeadProducer> _logger;
         private readonly IMapper _mapper;
         private readonly IBus _bus;
-        private List<LeadShortExchangeModel> _leadForUpdateRoles;
+        public List<LeadShortExchangeModel> LeadsGotVip { get; set; }
+        public List<LeadShortExchangeModel> LeadsLostVip { get; set; }
+        public ConcurrentBag<LeadForUpdateRole> ProcessedLeads { get; set; }
 
         public LeadProducer(ILogger<LeadProducer> logger, IBus bus, IMapper mapper)
         {
             _logger = logger;
             _bus = bus;
             _mapper = mapper;
-            _leadForUpdateRoles = new();
+            ProcessedLeads = new();
+            LeadsGotVip = new();
+            LeadsLostVip = new();
         }
 
-        public async Task SendLeads(LeadForUpdateRole lead)
-        {
-            var leadFOrSend = _mapper.Map<LeadShortExchangeModel>(lead);
-            _leadForUpdateRoles.Add(leadFOrSend);
+        public async Task SendLeads(List<LeadShortExchangeModel> leads)
+        { 
 
             var source = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            if (_leadForUpdateRoles.Count == 100)
+            if (LeadsLostVip.Count == 100)
             {
                 _logger.LogInformation("Try publish change leads");
-                await _bus.Publish(_leadForUpdateRoles.ToArray(), source.Token);
-                _leadForUpdateRoles.RemoveRange(0,100);
+                await _bus.Publish(LeadsLostVip.ToArray(), source.Token);
+                //_leadForUpdateRoles.RemoveRange(0,100);
                 _logger.LogInformation("Leads published");
             }
             

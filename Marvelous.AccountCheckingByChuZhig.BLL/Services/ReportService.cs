@@ -21,85 +21,53 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
             _mapper = mapper;
         }
 
-        #region AUF выкатываем со дворов
-        public async Task<List<TransactionResponseModel>?> GetLeadTransactionsForPeriod(int leadId, DateTime startDate, DateTime endDate)
-        {
-            Console.WriteLine("СКАЧИВАНИЕ транзакций лида с айди " + leadId);
-            var request = new RestRequest("api/Transactions/by-lead-id/in-range/", Method.Get)
-                .AddParameter("leadId", leadId)
-                .AddParameter("startDate", startDate.ToString("s"))
-                .AddParameter("endDate", endDate.ToString("s"));
-            var result = await GetResponseAsync<List<TransactionResponseModel>>(request, new CancellationTokenSource());
-            Console.WriteLine("Транзакции СКАЧАНЫ у лида с айди " + leadId + " их " + result.Data.Count());
-            return result.Data;
-        }
-
-
-        public async Task<List<LeadForUpdateRole>?> NewGetAllLeads(int start, int amount, CancellationTokenSource cancellationTokenSource)
+        public async Task<List<LeadForUpdateRole>?> GetLeadsInRange(int start, int amount)
         {
             RestRequest request = new RestRequest("api/Leads/take-leads-in-range", Method.Get);
 
             request.AddParameter("offset", start);
             request.AddParameter("fetch", amount);
-            var sres = await GetResponseAsync<List<LeadModel>>(request, cancellationTokenSource);
+            var sres = await GetResponseAsync<List<LeadStatusUpdateResponse>>(request);
 
             var list = sres.Data;
-
 
             return _mapper.Map<List<LeadForUpdateRole>>(list);
 
         }
 
-        public async Task<int> GetCountRANDOmLeadTransactionsWithoutWithdraw(int leadId)
-        {
-            Console.WriteLine("Получение РАНДОМНОГО кол-ва транзакций лида " + leadId);
-            Random random = new Random();
-            var countTransactions = await Task<int>.Run(() => random.Next(32, 52));
-            Console.WriteLine("РАНДОМНЫХ транзакций лида " + leadId + " составляет " + countTransactions);
-            return countTransactions;
-        }
-        #endregion
-
-        public async Task<int> GetCountLeadTransactionsWithoutWithdrawal(int leadId, DateTime startDate, CancellationTokenSource cancellationTokenSource)
+        public async Task<int> GetCountLeadTransactionsWithoutWithdrawal(int leadId)
         {
 
             var request = new RestRequest("api/Transactions/count-transaction-without-withdrawal/", Method.Get)
-                .AddParameter("leadId", leadId)
-                .AddParameter("startDate", startDate.ToString("s"));
+                .AddParameter("leadId", leadId);
 
             int result = 0;
-            if (!cancellationTokenSource.IsCancellationRequested)
-            {
-                var response = await GetResponseAsync<int>(request, cancellationTokenSource);
-                result = response.Data;
-            }
+
+            var response = await GetResponseAsync<int>(request);
+            result = response.Data;
 
             return result;
         }
 
-        public async Task<List<TransactionResponseModel>?> GetLeadTransactionsDepositWithdrawForLastMonth(int leadId, CancellationTokenSource cancellationTokenSource)
+        public async Task<List<ShortTransactionResponse>?> GetLeadTransactionsDepositWithdrawForLastMonth(int leadId)
         {
 
             var request = new RestRequest("api/Transactions/by-leadId-last-month/", Method.Get)
                 .AddParameter("leadId", leadId);
 
-            List<TransactionResponseModel>? result;
-            if (!cancellationTokenSource.IsCancellationRequested)
-            {
-                var response = await GetResponseAsync<List<TransactionResponseModel>>(request, cancellationTokenSource);
-                result = response.Data;
-            }
-            else
-                result = new();
+            List<ShortTransactionResponse>? result;
+            var response = await GetResponseAsync<List<ShortTransactionResponse>>(request);
+            result = response.Data;
+
 
             return result;
         }
 
-        public async Task<int> GetCountOfLeadsByRole(Role role, CancellationTokenSource cancellationTokenSource)
+        public async Task<int> GetCountOfLeadsByRole(Role role)
         {
             var request = new RestRequest("api/Leads/count-leads/", Method.Get)
                 .AddParameter("role", role.ToString());
-            var response = await GetResponseAsync<int>(request, cancellationTokenSource);
+            var response = await GetResponseAsync<int>(request);
             var result = response.Data;
 
             return result;

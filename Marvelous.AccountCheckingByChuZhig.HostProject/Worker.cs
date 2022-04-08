@@ -16,24 +16,16 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
         private readonly ILogHelper _log;
         private readonly ILeadProducer _leadProducer;
         private readonly IReportService _reportService;
-        private List<LeadForUpdateRole> _leadForUpdateRoles;
 
         public Worker(ILogHelper helper, ILeadProducer leadProducer, IReportService reportService)
         {
             _log = helper;
             _leadProducer = leadProducer;
             _reportService = reportService;
-            _leadForUpdateRoles = new();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //в будущем одна строка, а щас что имеем
-            //var cts = new CancellationTokenSource();
-            //var countOfLeadsVip = await _reportService.GetCountOfLeadsByRole(Role.Vip, cts);
-            //var countOfLeadsRegular = await _reportService.GetCountOfLeadsByRole(Role.Regular, cts);
-            //var countOfLeads = countOfLeadsVip + countOfLeadsRegular;
-
             #region DD
             //int i = 0; 
             //AccountChecking instance = new(_log);
@@ -51,13 +43,13 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             while (!stoppingToken.IsCancellationRequested)
             {
                 int i = 0;
-                int sizePack = 5;
+                int sizePack = 250;
                 _log.DoAction("LEAD VERIFICATION STARTED");
 
                 while (true)
                 {
                     CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-                    List<LeadForUpdateRole>? leadsForCheck = await _reportService.NewGetAllLeads(i, sizePack, cancelTokenSource);
+                    List<LeadForUpdateRole>? leadsForCheck = await _reportService.GetLeadsInRange(i, sizePack);
 
                     if (leadsForCheck is null || leadsForCheck.Count == 0)
                     {
@@ -71,10 +63,6 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
                     await task;
                     if (task.IsCompleted)
                     {
-                        //foreach (var lead in leadsForCheck)
-                        //{
-                        //    CheckerRole(lead);
-                        //}
                         i += sizePack;
                     }
                 }
@@ -122,72 +110,50 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
 
         public async Task StartCheckAsync(LeadForUpdateRole lead)
         {
-            CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-            CheckerRules checkerRules = new CheckerRules(_reportService, cancelTokenSource);
-            try
-            {
-                //Parallel.Invoke(
-                //    new ParallelOptions { CancellationToken = cancelTokenSource.Token },
-                //    async () => await checkerRules.CheckCountLeadTransactionsAsync(lead),
-                //    async () => await checkerRules.CheckDifferenceWithdrawDeposit(lead),
-                //    () => checkerRules.CheckLeadBirthday(lead)
-                //    );
+            CheckerRules checkerRules = new CheckerRules(_reportService);
+            //try
+            //{
+            Task<bool> taskCheckBirthday = Task.Run(() => checkerRules.CheckLeadBirthday(lead));
+            Task<bool> taskCheckCountTransactions = Task.Run(() => checkerRules.CheckCountLeadTransactionsAsync(lead));
+            Task<bool> taskCheckDifferenceTransactions = Task.Run(() => checkerRules.CheckDifferenceWithdrawDeposit(lead));
 
-                Task taskCheckBirthday = Task.Run(() => checkerRules.CheckLeadBirthday(lead), cancelTokenSource.Token);
-                Task taskCheckCountTransactions = Task.Run(() => checkerRules.CheckCountLeadTransactionsAsync(lead), cancelTokenSource.Token);
-                Task taskCheckDifferenceTransactions = Task.Run(() => checkerRules.CheckDifferenceWithdrawDeposit(lead), cancelTokenSource.Token);
-                Task[] tasks = { taskCheckBirthday, taskCheckCountTransactions, taskCheckDifferenceTransactions };
-                await Task.WhenAll(tasks);
-                await CheckerRole(lead);
-            }
-           
-            catch (Exception ex)
+            List<Task<bool>> tasks = new List<Task<bool>> { taskCheckBirthday, taskCheckCountTransactions, taskCheckDifferenceTransactions };
+
+            while (tasks.Count > 0)
             {
-                lead.DeservesToBeVip = true;
+                Task<bool> completed = await Task.WhenAny(tasks);
+                if (completed.Status == TaskStatus.RanToCompletion &&
+                    completed.Result)
+                {
+                    lead.DeservesToBeVip = true;
+                    break;
+                }
+                tasks.Remove(completed);
             }
-            finally
-            {
-                
-             }
+            _leadProducer.ProcessedLeads.Add(lead);
+            //}
+
+            //catch (Exception ex)
+            //{
+            //    lead.DeservesToBeVip = true;
+            //}
+            //finally
+            //{
+
+            //}
         }
 
         //private void CheckerRole(LeadForUpdateRole lead)
         //{
         //    if (lead.DeservesToBeVip && lead.Role == Role.Regular)
-        //        _log.DoAction($"Lead with Id = {lead.Id} got VIP status");
-        //    else if (!lead.DeservesToBeVip && lead.Role == Role.Vip) 
-        //        _log.DoAction($"Lead with Id = {lead.Id} lost VIP status");
-        //}
-        private async Task CheckerRole(LeadForUpdateRole lead)
-        {
-                if (lead.DeservesToBeVip && lead.Role == Role.Regular)
-                {
-                    _log.DoAction($"Lead with Id = {lead.Id} got VIP status");
-                    await _leadProducer.SendLeads(lead);
-                }
-                else if (!lead.DeservesToBeVip && lead.Role == Role.Vip)
-                {
-                    _log.DoAction($"Lead with Id = {lead.Id} lost VIP status");
-                    await _leadProducer.SendLeads(lead);
-                }
-        }
-
-        //private async Task SendLeads()
-        //{
-        //    while (true)
         //    {
-        //        if (_leadForUpdateRoles.Count == 200)
-        //        {
-        //            foreach (var lead in _leadForUpdateRoles)
-        //            {
-        //                if (!CheckerRole(lead))
-        //                {
-        //                    _leadForUpdateRoles.Remove(lead);
-        //                }
-        //            }
-        //            await _leadProducer.SendLeads(_leadForUpdateRoles);
-        //            _leadForUpdateRoles.Clear();
-        //        }
+        //        _log.DoAction($"Lead with Id = {lead.Id} got VIP status");
+        //        _leadProducer.LeadsGotVip.Add(lead);
+        //    }
+        //    else if (!lead.DeservesToBeVip && lead.Role == Role.Vip)
+        //    {
+        //        _log.DoAction($"Lead with Id = {lead.Id} lost VIP status");
+        //        _leadProducer.LeadsLostVip.Add(lead);
         //    }
         //}
     }

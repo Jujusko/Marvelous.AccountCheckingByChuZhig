@@ -49,6 +49,7 @@ IHost host = Host.CreateDefaultBuilder(args)
             });
 
         services.AddHostedService<Worker>();
+        services.AddHostedService<Sender>();
         services.AddSingleton<ILeadProducer, LeadProducer>();
         // Auto Mapper Configurations
         var mapperConfig = new MapperConfiguration(mc =>

@@ -11,22 +11,11 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
     public abstract class BaseService
     {
         protected string _domain;
-        protected async Task<RestResponse<T>?> GetResponseAsync<T>(RestRequest request, CancellationTokenSource cancellationTokenSource)
+        protected async Task<RestResponse<T>?> GetResponseAsync<T>(RestRequest request)
         {
             var client = new RestClient(_domain);
-            try
-            {
-                return await client.ExecuteAsync<T>(request, cancellationTokenSource.Token);
-            }
-            catch (Exception)
-            {
-                return new RestResponse<T> { IsSuccessful = false };
-            }
-               
-            
 
-
-
+            return await client.ExecuteAsync<T>(request);
         }
 
     }

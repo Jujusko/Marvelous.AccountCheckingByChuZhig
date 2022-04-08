@@ -13,7 +13,7 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject.Configurations
     {
         public CustomMapper()
         {
-            CreateMap<LeadModel, LeadForUpdateRole>();
+            CreateMap<LeadStatusUpdateResponse, LeadForUpdateRole>();
             CreateMap<LeadForUpdateRole, LeadShortExchangeModel>();
         }
     }
