@@ -12,24 +12,22 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject.Producers
     public class LeadProducer : ILeadProducer
     {
         private readonly ILogger<LeadProducer> _logger;
-        private readonly IMapper _mapper;
         private readonly IBus _bus;
         public List<LeadShortExchangeModel> LeadsGotVip { get; set; }
         public List<LeadShortExchangeModel> LeadsLostVip { get; set; }
         public ConcurrentBag<LeadForUpdateRole> ProcessedLeads { get; set; }
 
-        public LeadProducer(ILogger<LeadProducer> logger, IBus bus, IMapper mapper)
+        public LeadProducer(ILogger<LeadProducer> logger, IBus bus)
         {
             _logger = logger;
             _bus = bus;
-            _mapper = mapper;
             ProcessedLeads = new();
             LeadsGotVip = new();
             LeadsLostVip = new();
         }
 
         public async Task SendLeads(List<LeadShortExchangeModel> leads)
-        { 
+        {
 
             var source = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             if (LeadsLostVip.Count == 100)
@@ -39,7 +37,7 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject.Producers
                 //_leadForUpdateRoles.RemoveRange(0,100);
                 _logger.LogInformation("Leads published");
             }
-            
+
         }
     }
 }

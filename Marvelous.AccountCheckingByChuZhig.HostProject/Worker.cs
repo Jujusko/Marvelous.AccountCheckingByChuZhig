@@ -43,7 +43,7 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             while (!stoppingToken.IsCancellationRequested)
             {
                 int i = 0;
-                int sizePack = 250;
+                int sizePack = 25;
                 _log.DoAction("LEAD VERIFICATION STARTED");
 
                 while (true)
@@ -139,7 +139,6 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             //}
             //finally
             //{
-
             //}
         }
 

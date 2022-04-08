@@ -12,12 +12,10 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
     public class ReportService : BaseService, IReportService
     {
-        private readonly ILogHelper _logger;
         private readonly IMapper _mapper;
         public ReportService(ILogHelper logger, IMapper mapper)
         {
             _domain = ReportUrls.ReportDomain;
-            _logger = logger;
             _mapper = mapper;
         }
 
