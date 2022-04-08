@@ -16,11 +16,14 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
     {
         private readonly ILogHelper _log;
         private readonly ILeadProducer _leadProducer;
-
+        private List<LeadShortExchangeModel> LeadsGotVip { get; set; }
+        private List<LeadShortExchangeModel> LeadsLostVip { get; set; }
         public Sender(ILeadProducer leadProducer, ILogHelper log)
         {
             _leadProducer = leadProducer;
             _log = log;
+            LeadsGotVip = new();
+            LeadsLostVip = new();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -29,21 +32,27 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             {
                 LeadForUpdateRole? lead;
                 if (_leadProducer.ProcessedLeads.TryTake(out lead))
-                    CheckerRole(lead);
+                    await Task.Run(() => CheckerRole(lead));
             }
         }
 
-        private void CheckerRole(LeadForUpdateRole lead)
+        private async Task CheckerRole(LeadForUpdateRole lead)
         {
             if (lead.DeservesToBeVip && lead.Role == Role.Regular)
             {
+                lead.Role = Role.Vip;
                 _log.DoAction($"Lead with Id = {lead.Id} got VIP status");
-                _leadProducer.LeadsGotVip.Add(lead);
+                LeadsGotVip.Add(lead);
             }
             else if (!lead.DeservesToBeVip && lead.Role == Role.Vip)
             {
+                lead.Role = Role.Regular;
                 _log.DoAction($"Lead with Id = {lead.Id} got REGULAR status");
-                _leadProducer.LeadsLostVip.Add(lead);
+                LeadsGotVip.Add(lead);
+            }
+            if (LeadsGotVip.Count == 100)
+            {
+                await _leadProducer.SendLeads(LeadsGotVip);
             }
         }
     }

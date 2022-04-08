@@ -111,8 +111,7 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
         public async Task StartCheckAsync(LeadForUpdateRole lead)
         {
             CheckerRules checkerRules = new CheckerRules(_reportService);
-            //try
-            //{
+
             Task<bool> taskCheckBirthday = Task.Run(() => checkerRules.CheckLeadBirthday(lead));
             Task<bool> taskCheckCountTransactions = Task.Run(() => checkerRules.CheckCountLeadTransactionsAsync(lead));
             Task<bool> taskCheckDifferenceTransactions = Task.Run(() => checkerRules.CheckDifferenceWithdrawDeposit(lead));
@@ -131,29 +130,8 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
                 tasks.Remove(completed);
             }
             _leadProducer.ProcessedLeads.Add(lead);
-            //}
-
-            //catch (Exception ex)
-            //{
-            //    lead.DeservesToBeVip = true;
-            //}
-            //finally
-            //{
-            //}
+           
         }
 
-        //private void CheckerRole(LeadForUpdateRole lead)
-        //{
-        //    if (lead.DeservesToBeVip && lead.Role == Role.Regular)
-        //    {
-        //        _log.DoAction($"Lead with Id = {lead.Id} got VIP status");
-        //        _leadProducer.LeadsGotVip.Add(lead);
-        //    }
-        //    else if (!lead.DeservesToBeVip && lead.Role == Role.Vip)
-        //    {
-        //        _log.DoAction($"Lead with Id = {lead.Id} lost VIP status");
-        //        _leadProducer.LeadsLostVip.Add(lead);
-        //    }
-        //}
     }
 }
