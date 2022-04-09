@@ -1,46 +1,50 @@
-﻿using Marvelous.AccountCheckingByChuZhig.BLL.Helpers;
-using Marvelous.AccountCheckingByChuZhig.BLL.Models;
-using Marvelous.Contracts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Marvelous.Contracts.Enums;
+﻿using Marvelous.AccountCheckingByChuZhig.BLL.Models;
+using Marvelous.AccountCheckingByChuZhig.BLL.Extensions;
 
 namespace Marvelous.AccountCheckingByChuZhig.BLL.Services
 {
-    public class CheckerRules : ICheckerRules
+    public class CheckerRules
     {
+        private readonly IReportService _reportService;
+        private const int _daysAfterBirthday = -14;
+        private const int _requiredTransactionsNumberInTwoLastMonths = 42;
+        private const decimal _requiredDifferenceWthdrawDeposit = 13000m;
 
-        public bool CheckLeadBirthday(LeadModel leadModel)
+        public CheckerRules(IReportService reportService)
         {
-            int yearDifference = DateTime.Now.Year - leadModel.BirthDate.Year;
-            DateTime date = leadModel.BirthDate.AddYears(yearDifference);
-            return date >=
-                DateTime.Now.Subtract(TimeSpan.FromDays(14)); //считать заранее при каждом новом запуске
-        }
-        public bool CheckLeadTransactions(int countTransactionsWithoutWithdraw)
-        {
-            int requiredTransactionsNumber = 42;
-            if (countTransactionsWithoutWithdraw >= requiredTransactionsNumber)
-                return true;
-
-            return false;
+            _reportService = reportService;
         }
 
-        public bool CheckDifferenceWithdrawDeposit(List<TransactionResponseModel> leadTransactionsLastMonthWithdrawDeposit)
+        public bool CheckLeadBirthday(LeadForUpdateRole _lead)
         {
-            decimal difference = 0;
-            foreach (TransactionResponseModel trans in leadTransactionsLastMonthWithdrawDeposit)
+            int yearDifference = DateTime.Now.Year - _lead.BirthDate.Year;
+            DateTime date = _lead.BirthDate.AddYears(yearDifference);
+            bool result = date.IsInRange(DateTime.Now.AddDays(_daysAfterBirthday),DateTime.Now);
+            return result;
+        }
+        public async Task<bool> CheckCountLeadTransactionsAsync(LeadForUpdateRole _lead)
+        {
+            var countTransactionsWithoutWithdraw = await 
+                _reportService.GetCountLeadTransactionsWithoutWithdrawal(_lead.Id);
+            var result = countTransactionsWithoutWithdraw >= _requiredTransactionsNumberInTwoLastMonths;
+            return result;
+        }
+
+        public async Task<bool> CheckDifferenceWithdrawDeposit(LeadForUpdateRole _lead)
+        {
+            var leadTransactionsLastMonthWithdrawDeposit = await 
+                _reportService.GetLeadTransactionsDepositWithdrawForLastMonth(_lead.Id);
+            if (leadTransactionsLastMonthWithdrawDeposit is null || leadTransactionsLastMonthWithdrawDeposit.Count == 0)
             {
-                difference += trans.Amount * trans.RubRate;
+                return false;
             }
-
-            if (difference > 13000 || difference < -13000)
-                return true;
-
-            return false;
+            decimal difference = 0;
+            foreach (ShortTransactionResponse trans in leadTransactionsLastMonthWithdrawDeposit)
+            {
+                difference += trans.Amount * trans.Rate;
+            }
+            var result = difference > _requiredDifferenceWthdrawDeposit || difference < -_requiredDifferenceWthdrawDeposit;
+            return result;
         }
     }
 }

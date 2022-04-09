@@ -9,19 +9,9 @@ namespace Marvelous.AccountCheckingByChuZhig.BLL.Helpers
     public static class ReportUrls
     {
         public const string ReportDomain = "https://piter-education.ru:6010/";
-        public static string GetAmountOfLeads = "api/Leads/take-from-{start}-to-{amount}";
-        public static string GetLeads()
-        {
-            return "https://piter-education.ru:6010/api/leads";
-        }
+        public const string GetLeadsTakeInRange = "api/Leads/take-leads-in-range";
+        public const string GetCountLeadTransactionsWithoutWithdrawl = "api/Transactions/count-transaction-without-withdrawal/";
 
-        public static string GetLeadTransactionsForPeriod(int leadId, DateTime start, DateTime end)
-        {
-            var startString = start.ToString("s");
-            var endString = end.ToString("s");
-            return $"https://piter-education.ru:6010/api/Transactions/by-lead-id/in-range?leadId={leadId}&startDate={startString}&finishDate={endString}";
-        }
-
-        
+        public const string GetLeadTransactionsWithdrawlAndDeposit = "api/Transactions/by-leadId-last-month/";
     }
 }

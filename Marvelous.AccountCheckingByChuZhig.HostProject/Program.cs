@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Hosting;
 using Marvelous.AccountCheckingByChuZhig.BLL;
 using NLog.Extensions.Logging;
 using Marvelous.AccountCheckingByChuZhig.HostProject.Producers;
+using Marvelous.AccountCheckingByChuZhig.BLL.Services;
+using MassTransit;
+using AutoMapper;
+using Marvelous.AccountCheckingByChuZhig.HostProject.Configurations;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
@@ -12,14 +16,47 @@ IHost host = Host.CreateDefaultBuilder(args)
          .SetBasePath(Directory.GetCurrentDirectory()) //From NuGet Package Microsoft.Extensions.Configuration.Json
          .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
          .Build();
-        services.AddHostedService<Worker>();
-        services.AddSingleton<ILeadProducer, LeadProducer>();
-        services.AddSingleton<ILogHelper, LogHelper>()
-        .AddLogging(loggingBuilder =>
+
+        services.AddMassTransit(x =>
         {
-            // configure Logging with NLog
+            x.UsingRabbitMq();
+        });
+
+        // OPTIONAL, but can be used to configure the bus options
+        services.AddOptions<MassTransitHostOptions>()
+            .Configure(options =>
+            {
+                    // if specified, waits until the bus is started before
+                    // returning from IHostedService.StartAsync
+                    // default is false
+                    options.WaitUntilStarted = true;
+
+                    // if specified, limits the wait time when starting the bus
+                    options.StartTimeout = TimeSpan.FromSeconds(10);
+
+                    // if specified, limits the wait time when stopping the bus
+                    options.StopTimeout = TimeSpan.FromSeconds(30);
+            });
+
+        services.AddHostedService<Worker>();
+        services.AddHostedService<Sender>();
+        services.AddSingleton<ILeadProducer, LeadProducer>();
+        // Auto Mapper Configurations
+        var mapperConfig = new MapperConfiguration(mc =>
+        {
+            mc.AddProfile(new CustomMapper());
+        });
+
+        IMapper mapper = mapperConfig.CreateMapper();
+        services.AddSingleton(mapper);
+        services.AddSingleton<ILogHelper, LogHelper>();
+        services.AddSingleton<IReportService, ReportService>();
+        services.AddSingleton<IWorkerHelper, WorkerHelper>();
+        services.Configure<ConsoleLifetimeOptions>(opts => opts.SuppressStatusMessages = true);
+        services.AddLogging(loggingBuilder =>
+        {
             loggingBuilder.ClearProviders();
-            loggingBuilder.SetMinimumLevel(LogLevel.Trace);
+            loggingBuilder.SetMinimumLevel(LogLevel.Information);
             loggingBuilder.AddNLog(config);
         });
     })

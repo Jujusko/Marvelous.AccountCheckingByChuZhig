@@ -1,9 +1,12 @@
-﻿using Marvelous.Contracts.Enums;
+﻿using Marvelous.AccountCheckingByChuZhig.BLL.Models;
+using Marvelous.Contracts.ExchangeModels;
+using System.Collections.Concurrent;
 
 namespace Marvelous.AccountCheckingByChuZhig.HostProject.Producers
 {
     public interface ILeadProducer
     {
-        Task SendMessage(int leadId, Role role);
+        ConcurrentBag<LeadForUpdateRole> ProcessedLeads { get; set; }
+        Task SendLeads(List<LeadShortExchangeModel> leads);
     }
 }
