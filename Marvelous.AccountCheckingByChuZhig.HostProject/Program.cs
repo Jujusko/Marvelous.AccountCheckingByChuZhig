@@ -20,16 +20,6 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddMassTransit(x =>
         {
             x.UsingRabbitMq();
-            //x.UsingRabbitMq((context, cfg) =>
-            //    {
-            //        cfg.Host("localhost", "/", h =>
-            //        {
-            //            h.Username("guest");
-            //            h.Password("guest");
-            //        });
-
-            //        cfg.ConfigureEndpoints(context);
-            //    });
         });
 
         // OPTIONAL, but can be used to configure the bus options

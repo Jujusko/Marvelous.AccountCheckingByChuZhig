@@ -19,14 +19,24 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             _reportService = reportService;
         }
 
+        private async Task RunHeapLeads(List<LeadForUpdateRole> leads)
+        {
+            Task task = Parallel.ForEachAsync(leads, async (lead, token) =>
+            {
+                await StartCheckAsync(lead);
+            });
+            //await task;
+        }
         public async Task DoWork()
         {
             int startRange = 0;
             int sizePack = 25;
             _log.DoAction("LEAD VERIFICATION STARTED");
+            Task [] tasks = new Task [5];
 
             while (true)
             {
+
                 CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
                 List<LeadForUpdateRole>? leadsForCheck = await _reportService.GetLeadsInRange(startRange, sizePack);
 
@@ -35,15 +45,23 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
                     _log.DoAction("LEAD VERIFICATION COMPLETED");
                     break;
                 }
-                Task task = Parallel.ForEachAsync(leadsForCheck, async (lead, token) =>
+                //Task task = Parallel.ForEachAsync(leadsForCheck, async (lead, token) =>
+                //{
+                //    await StartCheckAsync(lead);
+                //});
+                //await task;
+                //if (task.IsCompleted)
+                //{
+                for (int j = 0; j < tasks.Count(); j++)
                 {
-                    await StartCheckAsync(lead);
-                });
-                await task;
-                if (task.IsCompleted)
-                {
+                    tasks[j] = RunHeapLeads(leadsForCheck);
                     startRange += sizePack;
                 }
+                Task.WaitAll(tasks);
+                
+                //tasks = RunHeapLeads(leadsForCheck);
+                    //startRange += sizePack;
+                //}
             }
         }
 
