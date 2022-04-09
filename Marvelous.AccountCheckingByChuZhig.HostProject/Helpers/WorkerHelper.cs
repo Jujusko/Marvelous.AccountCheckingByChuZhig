@@ -25,43 +25,32 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
             {
                 await StartCheckAsync(lead);
             });
-            //await task;
+            await task;
         }
         public async Task DoWork()
         {
             int startRange = 0;
             int sizePack = 25;
             _log.DoAction("LEAD VERIFICATION STARTED");
-            Task [] tasks = new Task [5];
+            Task[] tasks = new Task[5];
+            bool breaker = true;
+            List<LeadForUpdateRole>? leadsForCheck;
 
-            while (true)
+            while (breaker)
             {
-
-                CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-                List<LeadForUpdateRole>? leadsForCheck = await _reportService.GetLeadsInRange(startRange, sizePack);
-
-                if (leadsForCheck is null || leadsForCheck.Count == 0)
-                {
-                    _log.DoAction("LEAD VERIFICATION COMPLETED");
-                    break;
-                }
-                //Task task = Parallel.ForEachAsync(leadsForCheck, async (lead, token) =>
-                //{
-                //    await StartCheckAsync(lead);
-                //});
-                //await task;
-                //if (task.IsCompleted)
-                //{
                 for (int j = 0; j < tasks.Count(); j++)
                 {
+                    leadsForCheck = await _reportService.GetLeadsInRange(startRange, sizePack);
+                    if (leadsForCheck is null || leadsForCheck.Count == 0)
+                    {
+                        _log.DoAction("LEAD VERIFICATION COMPLETED");
+                        breaker = false;
+                        break;
+                    }
                     tasks[j] = RunHeapLeads(leadsForCheck);
                     startRange += sizePack;
                 }
                 Task.WaitAll(tasks);
-                
-                //tasks = RunHeapLeads(leadsForCheck);
-                    //startRange += sizePack;
-                //}
             }
         }
 
