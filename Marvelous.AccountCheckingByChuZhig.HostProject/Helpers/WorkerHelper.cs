@@ -2,8 +2,10 @@
 using Marvelous.AccountCheckingByChuZhig.BLL.Models;
 using Marvelous.AccountCheckingByChuZhig.BLL.Services;
 using Marvelous.AccountCheckingByChuZhig.HostProject.Producers;
+using Marvelous.Contracts.Endpoints;
 using Marvelous.Contracts.Enums;
 using Marvelous.Contracts.ExchangeModels;
+using Marvelous.Contracts.ResponseModels;
 
 namespace Marvelous.AccountCheckingByChuZhig.HostProject
 {
@@ -12,11 +14,13 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
         private readonly ILogHelper _log;
         private readonly ILeadProducer _leadProducer;
         private readonly IReportService _reportService;
-        public WorkerHelper(ILogHelper helper, ILeadProducer leadProducer, IReportService reportService)
+        private readonly IConfigAlyona _Alyona;
+        public WorkerHelper(ILogHelper helper, ILeadProducer leadProducer, IReportService reportService, IConfigAlyona Alyona)
         {
             _log = helper;
             _leadProducer = leadProducer;
             _reportService = reportService;
+            _Alyona = Alyona;
         }
 
         private async Task RunHeapLeads(List<LeadForUpdateRole> leads)
@@ -29,6 +33,9 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
         }
         public async Task DoWork()
         {
+            var b = await _Alyona.SendRequest<string>("https://piter-education.ru:6042", AuthEndpoints.ApiAuth + AuthEndpoints.TokenForMicroservice, Microservice.MarvelousAuth);
+           var a =  await _Alyona.SendRequest<IEnumerable<ConfigResponseModel>>("https://piter-education.ru:6040", ConfigsEndpoints.Configs, Microservice.MarvelousConfigs, b.Data);
+            Console.WriteLine(a.Content);
             int startRange = 0;
             int sizePack = 25;
             _log.DoAction("LEAD VERIFICATION STARTED");

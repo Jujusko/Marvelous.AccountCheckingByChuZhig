@@ -8,6 +8,9 @@ using Marvelous.AccountCheckingByChuZhig.BLL.Services;
 using MassTransit;
 using AutoMapper;
 using Marvelous.AccountCheckingByChuZhig.HostProject.Configurations;
+using Marvelous.Contracts.Enums;
+
+const string authUrl = "https://piter-education.ru:6042";
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
@@ -16,7 +19,8 @@ IHost host = Host.CreateDefaultBuilder(args)
          .SetBasePath(Directory.GetCurrentDirectory()) //From NuGet Package Microsoft.Extensions.Configuration.Json
          .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
          .Build();
-
+        //var configureUrl = new ConfigurationBuilder().Build();
+        //configureUrl[Microservice.MarvelousAuth.ToString()] = authUrl;
         services.AddMassTransit(x =>
         {
             x.UsingRabbitMq();
@@ -50,9 +54,11 @@ IHost host = Host.CreateDefaultBuilder(args)
         IMapper mapper = mapperConfig.CreateMapper();
         services.AddSingleton(mapper);
         services.AddSingleton<ILogHelper, LogHelper>();
+        services.AddSingleton<IConfigAlyona, ConfigAlyona>();
         services.AddSingleton<IReportService, ReportService>();
         services.AddSingleton<IWorkerHelper, WorkerHelper>();
         services.Configure<ConsoleLifetimeOptions>(opts => opts.SuppressStatusMessages = true);
+        //services.AddSingleton(configureUrl);//????
         services.AddLogging(loggingBuilder =>
         {
             loggingBuilder.ClearProviders();
@@ -61,5 +67,6 @@ IHost host = Host.CreateDefaultBuilder(args)
         });
     })
     .Build();
+
 
 await host.RunAsync();

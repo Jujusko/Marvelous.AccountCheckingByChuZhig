@@ -20,6 +20,7 @@
       "commandName": "Project",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development",
+        "TOKEN_MICROSERVICE": "",
         "LOG_DIRECTORY": "C:/Users/Anton/source/repos/Marvelous.AccountCheckingByChuZhig/Marvelous.AccountCheckingByChuZhig.HostProject"
       },
       "distributionName": ""
