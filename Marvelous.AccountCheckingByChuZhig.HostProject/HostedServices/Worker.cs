@@ -1,7 +1,4 @@
-using Marvelous.AccountCheckingByChuZhig.BLL;
-using Marvelous.AccountCheckingByChuZhig.BLL.Models;
-using Marvelous.AccountCheckingByChuZhig.BLL.Services;
-using Marvelous.AccountCheckingByChuZhig.HostProject.Producers;
+
 
 namespace Marvelous.AccountCheckingByChuZhig.HostProject
 {
@@ -15,10 +12,12 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 await _workerHelper.DoWork();
             }
+
         }
     }
 }
