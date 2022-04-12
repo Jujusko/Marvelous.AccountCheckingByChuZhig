@@ -33,8 +33,8 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
         }
         public async Task DoWork()
         {
-            var b = await _Alyona.SendRequest<string>("https://piter-education.ru:6042", AuthEndpoints.ApiAuth + AuthEndpoints.TokenForMicroservice, Microservice.MarvelousAuth);
-           var a =  await _Alyona.SendRequest<IEnumerable<ConfigResponseModel>>("https://piter-education.ru:6040", ConfigsEndpoints.Configs, Microservice.MarvelousConfigs, b.Data);
+            var token = await _Alyona.SendRequest<string>(AuthEndpoints.ApiAuth + AuthEndpoints.TokenForMicroservice, Microservice.MarvelousAuth);
+            var a =  await _Alyona.SendRequest<IEnumerable<ConfigResponseModel>>(ConfigsEndpoints.Configs, Microservice.MarvelousConfigs, token.Data);
             Console.WriteLine(a.Content);
             int startRange = 0;
             int sizePack = 25;

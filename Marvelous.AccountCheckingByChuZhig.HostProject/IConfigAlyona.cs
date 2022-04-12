@@ -5,6 +5,6 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
 {
     public interface IConfigAlyona
     {
-        Task<RestResponse<T>> SendRequest<T>(string url, string path, Microservice service, string jwtToken = "null");
+        Task<RestResponse<T>> SendRequest<T>(string path, Microservice service, string jwtToken = "null");
     }
 }

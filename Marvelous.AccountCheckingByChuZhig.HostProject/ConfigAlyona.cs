@@ -13,24 +13,22 @@ namespace Marvelous.AccountCheckingByChuZhig.HostProject
     public class ConfigAlyona : IConfigAlyona
     {
         //private readonly ILogger<AuthRequestClient> _logger;
-        private readonly IConfiguration _urls;
+        private readonly IConfiguration _config;
 
         public ConfigAlyona(IConfiguration config)
         {
-            _urls = config;
+            _config = config;
         }
-        public async Task<RestResponse<T>> SendRequest<T>(string url, string path, Microservice service, string jwtToken = "null")
+        public async Task<RestResponse<T>> SendRequest<T>(string path, Microservice service, string jwtToken = "null")
         {
             var request = new RestRequest(path);
-            //var client = new RestClient(_urls[service.ToString()]);
-            var client = new RestClient(url);
+            var client = new RestClient(_config[service.ToString()]);
+            //var client = new RestClient(url);
             client.Authenticator = new JwtAuthenticator(jwtToken);
             client.AddDefaultHeader(nameof(Microservice), Microservice.MarvelousAccountChecking.ToString());
             var response = await client.ExecuteAsync<T>(request);
             CheckTransactionError(response, service);
-            Console.WriteLine("QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ\n\n\n\n\n\n\n\n" +
-                $"{response.Data}\n\n\n\n\n\n\n\n\n\n\n\n\n");
-
+           
             return response;
         }
 
